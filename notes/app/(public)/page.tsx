@@ -42,7 +42,7 @@ async function NavActions() {
   }
   return (
     <>
-      <Link href="/login" className="ui-button ui-button-ghost min-h-0 px-4 py-2.5 text-xs">
+      <Link href="/login" className="ui-button ui-button-ghost min-h-0 px-4 py-2.5 text-sm">
         Log in
       </Link>
       <Link href="/signup" className="ui-button ui-button-primary min-h-0 px-5 py-2.5 text-xs">
@@ -55,7 +55,7 @@ async function NavActions() {
 function NavActionsFallback() {
   return (
     <>
-      <Link href="/login" className="ui-button ui-button-ghost min-h-0 px-4 py-2.5 text-xs">
+      <Link href="/login" className="ui-button ui-button-ghost min-h-0 px-4 py-2.5 text-sm">
         Log in
       </Link>
       <Link href="/signup" className="ui-button ui-button-primary min-h-0 px-5 py-2.5 text-xs">
@@ -171,9 +171,9 @@ export default function LandingPage() {
         <header className="flex flex-wrap items-center justify-between gap-4 py-6">
           <Brand />
           <nav className="hidden items-center gap-6 md:flex" aria-label="Sections">
-            <a href="#features" className="ui-text-secondary text-xs font-semibold hover:underline">Features</a>
-            <a href="#privacy" className="ui-text-secondary text-xs font-semibold hover:underline">Privacy</a>
-            <a href="#how-it-works" className="ui-text-secondary text-xs font-semibold hover:underline">How it works</a>
+            <a href="#features" className="ui-text-secondary text-sm font-semibold hover:underline">Features</a>
+            <a href="#privacy" className="ui-text-secondary text-sm font-semibold hover:underline">Privacy</a>
+            <a href="#how-it-works" className="ui-text-secondary text-sm font-semibold hover:underline">How it works</a>
           </nav>
           <div className="flex items-center gap-2">
             <Suspense fallback={<NavActionsFallback />}>
