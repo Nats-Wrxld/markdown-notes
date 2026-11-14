@@ -1,36 +1,84 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# UrSpace
 
-## Getting Started
+**Your thoughts deserve a space of their own.**
 
-First, run the development server:
+UrSpace is a private, personal note-taking platform for tutors, with a role-based
+administrative system for oversight. Warm editorial design, a Tiptap rich-text
+editor, and security enforced at the database layer — not just in the UI.
+
+## Features
+
+- **Tutor workspace** — rich-text notes (headings, lists, quotes, links, code,
+  tasks), tags, instant search, statistics, and a one-time import of legacy
+  localStorage notes.
+- **Personalization** — light/dark themes, five photo backgrounds, profile
+  display name, and avatar upload/replace/remove via Supabase Storage.
+- **Authentication** — email/password signup, login, logout, password recovery
+  and reset, server-protected routes, role-based redirects, account suspension.
+- **Administration** — tutor management (create, rename, suspend/reactivate,
+  reset links), note oversight with search/filter/pagination, an append-only
+  audit log, and owner-only platform settings (public signup toggle, platform
+  notice) and administrator management.
+- **Honest privacy** — tutors are told, at signup and on the landing page, that
+  authorized administrators and the owner can view their notes. No misleading
+  end-to-end-privacy claims.
+
+## Roles
+
+| Role  | Access |
+| ----- | ------ |
+| Owner | Everything: admins, tutors, notes, settings, audit. Provisioned once via `db/owner-setup.sql` — never through public signup. |
+| Admin | Tutors and their notes only. Cannot create admins, touch the owner, or change roles. |
+| Tutor | Their own notes and profile only. |
+
+Authorization is enforced three times over: server-side guards in every action,
+PostgreSQL Row Level Security, and triggers protecting `role`, `account_status`,
+and identity fields.
+
+## Stack
+
+Next.js 16 (App Router, Turbopack, Cache Components + Partial Prefetching),
+React 19, TypeScript (strict), Tailwind CSS v4, Tiptap v3, Zod 4,
+Supabase (Auth, Postgres, Storage) via `@supabase/ssr`.
+
+## Quick start
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local   # fill in your Supabase values
+npm run dev                  # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The app needs its database schema applied before authenticated flows work.
+Follow **[docs/SETUP.md](docs/SETUP.md)** for the complete setup: schema, auth
+configuration, owner provisioning, verification, and Vercel deployment.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Command | Purpose |
+| ------- | ------- |
+| `npm run dev` | Development server |
+| `npm run build` | Production build |
+| `npm run start` | Serve the production build |
+| `npm run lint` | ESLint |
+| `npm test` | Vitest unit tests (validation, sanitization, role logic) |
 
-## Learn More
+## Project layout
 
-To learn more about Next.js, take a look at the following resources:
+```
+app/(public)/    landing, login, signup, recovery, suspended, terms
+app/(tutor)/     dashboard, notes/[id], note actions
+app/(account)/   profile, avatar & password actions
+app/(admin)/     admin overview, tutors, notes, settings, activity
+app/auth/        auth server actions + /auth/confirm route handler
+components/      design system, editor form, admin controls
+lib/             auth guards, DALs, validation, Supabase clients
+db/              schema.sql, owner-setup.sql, rls-tests.sql
+docs/            SETUP.md, IMPLEMENTATION_LOG.md
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Documentation
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [Setup & deployment guide](docs/SETUP.md)
+- [Implementation log](docs/IMPLEMENTATION_LOG.md) — decisions, changes, and
+  verification results as the project was built.

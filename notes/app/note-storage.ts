@@ -1,105 +1,20 @@
 import type { JSONContent } from "@tiptap/core";
-import type { Note } from "./actions";
+import { parseNoteBody } from "@/lib/note-document";
 
 export const NOTE_STORAGE_KEY = "urspace:notes";
+export const IMPORT_FLAG_KEY = "urspace:notes-imported";
 
-export type SavedNote = Note & {
+export type SavedNote = {
   id: string;
-  createdAt?: string;
-  updatedAt?: string;
-  [key: string]: unknown;
+  title: string;
+  body: JSONContent;
+  tags: string[];
 };
 
 type NoteLoadResult = {
   notes: SavedNote[];
   error: string | null;
 };
-
-const allowedNodeTypes = new Set([
-  "doc",
-  "paragraph",
-  "heading",
-  "text",
-  "hardBreak",
-  "bulletList",
-  "orderedList",
-  "listItem",
-  "taskList",
-  "taskItem",
-  "blockquote",
-  "codeBlock",
-  "horizontalRule",
-]);
-const allowedMarkTypes = new Set(["bold", "italic", "underline", "strike", "code"]);
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function isJSONContent(value: unknown): value is JSONContent {
-  if (
-    !isRecord(value) ||
-    typeof value.type !== "string" ||
-    !allowedNodeTypes.has(value.type)
-  ) {
-    return false;
-  }
-
-  if (value.type === "text" && typeof value.text !== "string") {
-    return false;
-  }
-
-  if (
-    value.content !== undefined &&
-    (!Array.isArray(value.content) || !value.content.every(isJSONContent))
-  ) {
-    return false;
-  }
-
-  if (
-    value.marks !== undefined &&
-    (!Array.isArray(value.marks) ||
-      !value.marks.every(
-      (mark) =>
-        isRecord(mark) &&
-        typeof mark.type === "string" &&
-        allowedMarkTypes.has(mark.type),
-    ))
-  ) {
-    return false;
-  }
-
-  if (
-    value.attrs !== undefined &&
-    (!isRecord(value.attrs) ||
-    (value.type === "heading" &&
-      ![1, 2, 3].includes(Number(value.attrs.level))) ||
-    (value.type === "orderedList" &&
-      value.attrs.start !== undefined &&
-      (!Number.isSafeInteger(Number(value.attrs.start)) ||
-        Number(value.attrs.start) < 1)) ||
-    (value.type === "taskItem" &&
-      value.attrs.checked !== undefined &&
-      typeof value.attrs.checked !== "boolean"))
-  ) {
-    return false;
-  }
-
-  return true;
-}
-
-function isSavedNote(value: unknown): value is SavedNote {
-  return (
-    isRecord(value) &&
-    typeof value.id === "string" &&
-    value.id.length > 0 &&
-    typeof value.title === "string" &&
-    isJSONContent(value.body) &&
-    value.body.type === "doc" &&
-    Array.isArray(value.tags) &&
-    value.tags.every((tag) => typeof tag === "string")
-  );
-}
 
 export function loadNotes(): NoteLoadResult {
   let stored: string | null;
@@ -123,37 +38,31 @@ export function loadNotes(): NoteLoadResult {
   } catch {
     return {
       notes: [],
-      error:
-        "Saved notes are corrupted and have been left untouched. Saving a new note will replace the unreadable data.",
+      error: "Saved notes are corrupted and have been left untouched.",
     };
   }
 
-  if (!Array.isArray(parsed) || !parsed.every(isSavedNote)) {
+  if (!Array.isArray(parsed)) {
     return {
       notes: [],
-      error:
-        "Saved notes couldn’t be read and have been left untouched. Saving a new note will replace the unreadable data.",
+      error: "Saved notes couldn’t be read and have been left untouched.",
     };
   }
 
-  const ids = new Set(parsed.map((note) => note.id));
-  if (ids.size !== parsed.length) {
-    return {
-      notes: [],
-      error:
-        "Saved notes contain duplicate IDs and couldn’t be restored. Existing storage has been left untouched.",
-    };
+  const notes: SavedNote[] = [];
+  for (const item of parsed) {
+    if (typeof item !== "object" || item === null) continue;
+    const record = item as Record<string, unknown>;
+    if (typeof record.id !== "string" || typeof record.title !== "string") {
+      continue;
+    }
+    const body = parseNoteBody(record.body);
+    if (!body) continue;
+    const tags = Array.isArray(record.tags)
+      ? record.tags.filter((tag): tag is string => typeof tag === "string")
+      : [];
+    notes.push({ id: record.id, title: record.title, body, tags });
   }
 
-  return { notes: parsed, error: null };
-}
-
-export function persistNotes(notes: SavedNote[]): void {
-  window.localStorage.setItem(NOTE_STORAGE_KEY, JSON.stringify(notes));
-}
-
-export function getNoteBodyText(node: JSONContent): string {
-  return [node.text ?? "", ...(node.content ?? []).map(getNoteBodyText)]
-    .filter(Boolean)
-    .join(" ");
+  return { notes, error: null };
 }

@@ -1,0 +1,1 @@
+export { handleAuthCallback as GET } from "@/lib/auth-callback";

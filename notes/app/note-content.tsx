@@ -1,5 +1,6 @@
 import type { JSONContent } from "@tiptap/core";
 import type { ReactNode } from "react";
+import { safeLinkHref } from "@/lib/note-document";
 
 type NoteContentProps = {
   document: JSONContent;
@@ -28,6 +29,22 @@ function renderInline(node: JSONContent, key: string): ReactNode {
       case "code":
         content = <code key={`${key}-mark-${index}`}>{content}</code>;
         break;
+      case "link": {
+        const href = safeLinkHref(mark.attrs?.href);
+        if (href) {
+          content = (
+            <a
+              key={`${key}-mark-${index}`}
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer nofollow"
+            >
+              {content}
+            </a>
+          );
+        }
+        break;
+      }
     }
   }
 

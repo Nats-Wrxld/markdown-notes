@@ -1,0 +1,55 @@
+import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
+
+export async function proxy(request: NextRequest) {
+  // [OAUTH-DIAG TEMPORARY — remove after diagnosis]
+  const diagParams = request.nextUrl.searchParams;
+  if (diagParams.has("code") || diagParams.has("error")) {
+    console.log("[oauth-diag] request carries code/error", {
+      pathname: request.nextUrl.pathname,
+      host: request.headers.get("host"),
+      hasCode: diagParams.has("code"),
+      error: diagParams.get("error"),
+    });
+  }
+
+  let supabaseResponse = NextResponse.next({ request });
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet, headers) {
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value),
+          );
+          supabaseResponse = NextResponse.next({ request });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options),
+          );
+          // Prevent CDNs from caching responses that carry session cookies.
+          Object.entries(headers).forEach(([key, value]) =>
+            supabaseResponse.headers.set(key, value),
+          );
+        },
+      },
+    },
+  );
+
+  // Refreshes the auth token and writes updated cookies via setAll.
+  // Do not add logic between createServerClient and this call, and return
+  // supabaseResponse as-is so the refreshed cookies reach the browser.
+  await supabase.auth.getUser();
+
+  return supabaseResponse;
+}
+
+export const config = {
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
+};

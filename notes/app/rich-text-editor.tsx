@@ -1,12 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, type MouseEvent, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type MouseEvent, type ReactNode } from "react";
 import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import Underline from "@tiptap/extension-underline";
 import TaskList from "@tiptap/extension-task-list";
 import TaskItem from "@tiptap/extension-task-item";
 import type { JSONContent } from "@tiptap/core";
+import { safeLinkHref } from "@/lib/note-document";
 
 const EMPTY_DOCUMENT: JSONContent = {
   type: "doc",
@@ -68,6 +68,7 @@ function ToolIcon({ name }: { name: string }) {
     undo: <><path d="M9 14 4 9l5-5" /><path d="M4 9h9a6 6 0 0 1 0 12h-2" /></>,
     redo: <><path d="m15 14 5-5-5-5" /><path d="M20 9h-9a6 6 0 0 0 0 12h2" /></>,
     clear: <><path d="M4 7h16M10 11v6M14 11v6" /><path d="m6 7 1 13h10l1-13M9 7V4h6v3" /></>,
+    link: <><path d="M9.5 14.5 14.5 9.5" /><path d="M11 6.5 12.8 4.7a3.5 3.5 0 0 1 5 5L16 11.5" /><path d="M13 17.5 11.2 19.3a3.5 3.5 0 0 1-5-5L8 12.5" /></>,
   };
 
   return (
@@ -88,8 +89,17 @@ export default function RichTextEditor({
   const editor = useEditor(
     {
       extensions: [
-        StarterKit,
-        Underline,
+        StarterKit.configure({
+          link: {
+            openOnClick: false,
+            autolink: true,
+            protocols: ["http", "https", "mailto"],
+            HTMLAttributes: {
+              rel: "noopener noreferrer nofollow",
+              target: "_blank",
+            },
+          },
+        }),
         TaskList,
         TaskItem.configure({ nested: true }),
       ],
@@ -104,7 +114,10 @@ export default function RichTextEditor({
           "data-placeholder": "Write something worth remembering…",
         },
       },
-      onUpdate: ({ editor: currentEditor }) => onChange(currentEditor.getJSON()),
+      onUpdate: ({ editor: currentEditor, transaction }) => {
+        // Sync only on real document changes; editable toggles emit updates without changing the doc and would re-mark the form dirty.
+        if (transaction.docChanged) onChange(currentEditor.getJSON());
+      },
     },
     [onChange],
   );
@@ -121,6 +134,7 @@ export default function RichTextEditor({
         italic: currentEditor.isActive("italic"),
         underline: currentEditor.isActive("underline"),
         strike: currentEditor.isActive("strike"),
+        link: currentEditor.isActive("link"),
         paragraph: currentEditor.isActive("paragraph"),
         heading1: currentEditor.isActive("heading", { level: 1 }),
         heading2: currentEditor.isActive("heading", { level: 2 }),
@@ -141,9 +155,42 @@ export default function RichTextEditor({
     [],
   );
 
+  const [linkOpen, setLinkOpen] = useState(false);
+  const [linkUrl, setLinkUrl] = useState("");
+  const [linkError, setLinkError] = useState("");
+
+  function openLinkEditor() {
+    if (!editor) return;
+    const current = editor.getAttributes("link").href;
+    setLinkUrl(typeof current === "string" ? current : "");
+    setLinkError("");
+    setLinkOpen((open) => !open);
+  }
+
+  function applyLink() {
+    if (!editor) return;
+    const href = safeLinkHref(linkUrl.trim());
+    if (!href) {
+      setLinkError("Enter a valid link starting with http://, https://, or mailto:.");
+      return;
+    }
+    editor.chain().focus().extendMarkRange("link").setLink({ href }).run();
+    setLinkOpen(false);
+    setLinkError("");
+  }
+
+  function removeLink() {
+    if (!editor) return;
+    editor.chain().focus().extendMarkRange("link").unsetLink().run();
+    setLinkUrl("");
+    setLinkOpen(false);
+    setLinkError("");
+  }
+
   useEffect(() => {
     if (editor && resetKey > 0) {
-      editor.commands.clearContent();
+      // emitUpdate=false: the form resets body state itself; emitting would re-mark it dirty and hide the save confirmation.
+      editor.commands.clearContent(false);
     }
   }, [editor, resetKey]);
 
@@ -207,6 +254,9 @@ export default function RichTextEditor({
           <ToolbarButton label="Strikethrough" active={state.strike} onMouseDown={handleMouseDown} onClick={() => editor.chain().focus().toggleStrike().run()}>
             <ToolIcon name="strike" />
           </ToolbarButton>
+          <ToolbarButton label="Link" active={state.link} onMouseDown={handleMouseDown} onClick={openLinkEditor}>
+            <ToolIcon name="link" />
+          </ToolbarButton>
         </div>
         <span className="editor-toolbar-divider" aria-hidden="true" />
         <div className="editor-tool-group" aria-label="Lists">
@@ -233,6 +283,43 @@ export default function RichTextEditor({
           </ToolbarButton>
         </div>
       </div>
+      {linkOpen && (
+        <div className="editor-link-row">
+          <input
+            type="url"
+            value={linkUrl}
+            onChange={(event) => {
+              setLinkUrl(event.target.value);
+              setLinkError("");
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                applyLink();
+              }
+            }}
+            placeholder="https://example.com"
+            aria-label="Link URL"
+            className="ui-input min-w-0 flex-1 rounded-lg border px-3 py-2 text-sm outline-none"
+          />
+          <button type="button" onClick={applyLink} className="ui-button ui-button-primary min-h-0 rounded-lg px-3 py-2 text-xs">
+            Apply
+          </button>
+          <button type="button" onClick={removeLink} className="ui-button ui-button-secondary min-h-0 rounded-lg px-3 py-2 text-xs">
+            Remove
+          </button>
+          <button type="button" onClick={() => setLinkOpen(false)} aria-label="Close link editor" className="ui-button ui-button-ghost min-h-0 rounded-lg px-2 py-2 text-xs">
+            <svg viewBox="0 0 20 20" fill="none" className="size-4" aria-hidden="true">
+              <path d="m5 5 10 10M15 5 5 15" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+            </svg>
+          </button>
+          {linkError && (
+            <p role="alert" className="ui-text-error w-full text-xs font-medium">
+              {linkError}
+            </p>
+          )}
+        </div>
+      )}
       <EditorContent editor={editor} />
     </div>
   );

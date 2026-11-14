@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Script from "next/script";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Fraunces, Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -13,9 +13,18 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
-  title: "UrSpace - Your personal notebook",
-  description: "A calm corner to collect ideas, little reminders, and everything you don't want to forget.",
+  title: {
+    default: "UrSpace - Your thoughts deserve a space of their own",
+    template: "%s · UrSpace",
+  },
+  description:
+    "A calm, private notebook for tutors and their teams. Write freely, organize gently, and keep every thought in a space of its own.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -23,7 +32,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       data-theme="light"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
+      className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} h-full antialiased`}
     >
       <head>
         <Script id="urspace-theme-bootstrap" strategy="beforeInteractive">
