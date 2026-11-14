@@ -2,17 +2,6 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function proxy(request: NextRequest) {
-  // [OAUTH-DIAG TEMPORARY — remove after diagnosis]
-  const diagParams = request.nextUrl.searchParams;
-  if (diagParams.has("code") || diagParams.has("error")) {
-    console.log("[oauth-diag] request carries code/error", {
-      pathname: request.nextUrl.pathname,
-      host: request.headers.get("host"),
-      hasCode: diagParams.has("code"),
-      error: diagParams.get("error"),
-    });
-  }
-
   let supabaseResponse = NextResponse.next({ request });
 
   const supabase = createServerClient(
