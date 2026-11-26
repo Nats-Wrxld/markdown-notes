@@ -7,6 +7,7 @@ import TaskList from "@tiptap/extension-task-list";
 import TaskItem from "@tiptap/extension-task-item";
 import type { JSONContent } from "@tiptap/core";
 import { safeLinkHref } from "@/lib/note-document";
+import { NoteEditorBackdrop, useNoteEditorWallpaper } from "@/app/background-settings";
 
 const EMPTY_DOCUMENT: JSONContent = {
   type: "doc",
@@ -86,6 +87,8 @@ export default function RichTextEditor({
   disabled = false,
   invalid = false,
 }: RichTextEditorProps) {
+  const { wallpaper } = useNoteEditorWallpaper();
+
   const editor = useEditor(
     {
       extensions: [
@@ -222,7 +225,9 @@ export default function RichTextEditor({
   return (
     <div
       className={`note-editor-shell ${invalid ? "note-editor-invalid" : ""}`}
+      data-wallpaper={wallpaper ? "true" : undefined}
     >
+      <NoteEditorBackdrop />
       <div className="note-editor-toolbar" role="toolbar" aria-label="Text formatting">
         <div className="editor-tool-group" aria-label="Text style">
           <ToolbarButton label="Normal paragraph" active={state.paragraph} onMouseDown={handleMouseDown} onClick={() => editor.chain().focus().setParagraph().run()}>

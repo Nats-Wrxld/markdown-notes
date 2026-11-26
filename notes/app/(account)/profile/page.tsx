@@ -20,7 +20,7 @@ function Section({
 }) {
   return (
     <Reveal delay={delay}>
-      <section className="ui-surface-panel rounded-[24px] border p-7 shadow-[0_10px_40px_rgba(65,55,104,0.06)] sm:p-8">
+      <section className="ui-surface-panel ui-shadow-panel rounded-[24px] border p-7 sm:p-8">
         <h2 className="ui-text-primary font-serif text-xl font-medium tracking-[-0.02em]">{title}</h2>
         <p className="ui-text-muted mt-1.5 text-sm leading-6">{description}</p>
         <div className="mt-6">{children}</div>

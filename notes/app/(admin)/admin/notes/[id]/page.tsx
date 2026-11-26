@@ -53,7 +53,7 @@ export default async function AdminNoteDetailPage({
         </Badge>
       </div>
 
-      <article className="ui-surface-panel rounded-[24px] border p-7 shadow-[0_10px_40px_rgba(65,55,104,0.06)] sm:p-10">
+      <article className="ui-surface-panel ui-shadow-panel rounded-[24px] border p-7 sm:p-10">
         <h1 className="ui-text-primary font-serif text-[clamp(1.6rem,4vw,2.4rem)] font-medium leading-[1.15] tracking-[-0.02em]">
           {note.title}
         </h1>

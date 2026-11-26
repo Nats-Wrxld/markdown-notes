@@ -14,7 +14,7 @@ import {
 
 const STORAGE_KEY = "urspace:background";
 
-const BACKGROUNDS = [
+const WALLPAPERS = [
   {
     id: "paperclips",
     name: "Paperclips",
@@ -47,21 +47,37 @@ const BACKGROUNDS = [
   },
 ] as const;
 
-type BackgroundId = (typeof BACKGROUNDS)[number]["id"];
-type BackgroundChoice = BackgroundId | null;
+type Wallpaper = (typeof WALLPAPERS)[number];
+type WallpaperId = Wallpaper["id"];
+type WallpaperChoice = WallpaperId | null;
 
-type BackgroundContextValue = {
+type WallpaperContextValue = {
   openSettings: () => void;
+  wallpaper: Wallpaper | null;
+  onImageError: () => void;
 };
 
-const BackgroundContext = createContext<BackgroundContextValue | null>(null);
+const WallpaperContext = createContext<WallpaperContextValue | null>(null);
 
-function isBackgroundId(value: string | null): value is BackgroundId {
-  return BACKGROUNDS.some((background) => background.id === value);
+function isWallpaperId(value: string | null): value is WallpaperId {
+  return WALLPAPERS.some((wallpaper) => wallpaper.id === value);
 }
 
-function getBackground(choice: BackgroundChoice) {
-  return BACKGROUNDS.find((background) => background.id === choice);
+function getWallpaper(choice: WallpaperChoice) {
+  return WALLPAPERS.find((wallpaper) => wallpaper.id === choice) ?? null;
+}
+
+/**
+ * Static application backdrop. The photo wallpapers are no longer rendered here:
+ * they belong to the note editor only (see `NoteEditorBackdrop`).
+ */
+export function AppBackdrop() {
+  return (
+    <div className="app-background" aria-hidden="true">
+      <span className="ambient-orb ambient-orb-peach" />
+      <span className="ambient-orb ambient-orb-apricot" />
+    </div>
+  );
 }
 
 export function BackgroundSettingsProvider({
@@ -69,10 +85,9 @@ export function BackgroundSettingsProvider({
 }: {
   children: ReactNode;
 }) {
-  const [selected, setSelected] = useState<BackgroundChoice>(null);
-  const [preview, setPreview] = useState<BackgroundChoice>(null);
+  const [selected, setSelected] = useState<WallpaperChoice>(null);
+  const [preview, setPreview] = useState<WallpaperChoice>(null);
   const [isOpen, setIsOpen] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
   const [storageError, setStorageError] = useState("");
   const [imageError, setImageError] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -81,11 +96,9 @@ export function BackgroundSettingsProvider({
     const timer = window.setTimeout(() => {
       try {
         const saved = window.localStorage.getItem(STORAGE_KEY);
-        setSelected(isBackgroundId(saved) ? saved : null);
+        setSelected(isWallpaperId(saved) ? saved : null);
       } catch {
-        setStorageError("Background preferences are unavailable in this browser.");
-      } finally {
-        setIsLoaded(true);
+        setStorageError("Wallpaper preferences are unavailable in this browser.");
       }
     }, 0);
 
@@ -127,11 +140,11 @@ export function BackgroundSettingsProvider({
       setStorageError("");
       setIsOpen(false);
     } catch {
-      setStorageError("UrSpace couldn’t save this background. Check your browser storage settings and try again.");
+      setStorageError("UrSpace couldn’t save this wallpaper. Check your browser storage settings and try again.");
     }
   }
 
-  function resetBackground() {
+  function resetWallpaper() {
     setPreview(null);
     try {
       window.localStorage.removeItem(STORAGE_KEY);
@@ -140,7 +153,7 @@ export function BackgroundSettingsProvider({
       setStorageError("");
       setIsOpen(false);
     } catch {
-      setStorageError("UrSpace couldn’t reset this background. Check your browser storage settings and try again.");
+      setStorageError("UrSpace couldn’t reset this wallpaper. Check your browser storage settings and try again.");
     }
   }
 
@@ -148,54 +161,23 @@ export function BackgroundSettingsProvider({
     setImageError(true);
     setSelected(null);
     setPreview(null);
-    setStorageError("That background image is unavailable. The default background has been restored.");
+    setStorageError("That wallpaper image is unavailable. The plain writing area has been restored.");
     try {
       window.localStorage.removeItem(STORAGE_KEY);
     } catch {
-      setStorageError("That image and browser storage are unavailable. The default background is shown.");
+      setStorageError("That image and browser storage are unavailable. The plain writing area is shown.");
     }
   }
 
-  const visibleChoice = isOpen ? preview : selected;
-  const visibleBackground = imageError ? undefined : getBackground(visibleChoice);
-
-  function handlePreview(choice: BackgroundChoice) {
+  function handlePreview(choice: WallpaperChoice) {
     setImageError(false);
     setPreview(choice);
   }
 
+  const wallpaper = imageError ? null : getWallpaper(isOpen ? preview : selected);
+
   return (
-    <BackgroundContext.Provider value={{ openSettings }}>
-      <div
-        className={`app-background ${visibleBackground ? "app-background-image" : ""}`}
-        aria-hidden="true"
-      >
-        {visibleBackground ? (
-          <>
-            {isLoaded && (
-              <Image
-                key={visibleBackground.id}
-                src={visibleBackground.src}
-                alt=""
-                fill
-                priority
-                sizes="100vw"
-                className="app-background-photo"
-                onError={handleImageError}
-              />
-            )}
-            <div
-              className="app-background-dimmer"
-              style={{ opacity: visibleBackground.overlay }}
-            />
-          </>
-        ) : (
-          <>
-            <span className="ambient-orb ambient-orb-peach" />
-            <span className="ambient-orb ambient-orb-apricot" />
-          </>
-        )}
-      </div>
+    <WallpaperContext.Provider value={{ openSettings, wallpaper, onImageError: handleImageError }}>
       {children}
       <BackgroundSettingsDialog
         dialogRef={dialogRef}
@@ -205,16 +187,50 @@ export function BackgroundSettingsProvider({
         storageError={storageError}
         onPreview={handlePreview}
         onApply={applySelection}
-        onReset={resetBackground}
+        onReset={resetWallpaper}
         onClose={closeSettings}
         onDialogClose={() => setIsOpen(false)}
       />
-    </BackgroundContext.Provider>
+    </WallpaperContext.Provider>
   );
 }
 
+/**
+ * Renders the chosen wallpaper inside the note editor shell, behind the text.
+ * Returns null when the plain writing surface is selected.
+ */
+export function NoteEditorBackdrop() {
+  const context = useContext(WallpaperContext);
+  const wallpaper = context?.wallpaper;
+
+  if (!context || !wallpaper) return null;
+
+  return (
+    <div className="note-editor-wallpaper" aria-hidden="true">
+      <Image
+        key={wallpaper.id}
+        src={wallpaper.src}
+        alt=""
+        fill
+        sizes="(max-width: 1024px) 100vw, 560px"
+        className="note-editor-wallpaper-photo"
+        onError={context.onImageError}
+      />
+      <div
+        className="note-editor-wallpaper-dimmer"
+        style={{ opacity: Math.min(0.82, wallpaper.overlay + 0.2) }}
+      />
+    </div>
+  );
+}
+
+export function useNoteEditorWallpaper() {
+  const context = useContext(WallpaperContext);
+  return { wallpaper: context?.wallpaper ?? null };
+}
+
 export function BackgroundSettingsTrigger() {
-  const context = useContext(BackgroundContext);
+  const context = useContext(WallpaperContext);
   if (!context) return null;
 
   return (
@@ -222,16 +238,16 @@ export function BackgroundSettingsTrigger() {
       type="button"
       onClick={context.openSettings}
       aria-haspopup="dialog"
-      aria-label="Change background appearance"
+      aria-label="Change note editor wallpaper"
       className="background-settings-trigger"
     >
       <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
         <path d="M3 5.5h14M5.5 10h9m-6.5 4.5h3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-        <circle cx="7" cy="5.5" r="1.5" fill="#fbf8f3" stroke="currentColor" strokeWidth="1.5" />
-        <circle cx="12" cy="10" r="1.5" fill="#fbf8f3" stroke="currentColor" strokeWidth="1.5" />
-        <circle cx="9.5" cy="14.5" r="1.5" fill="#fbf8f3" stroke="currentColor" strokeWidth="1.5" />
+        <circle cx="7" cy="5.5" r="1.5" fill="var(--surface-control)" stroke="currentColor" strokeWidth="1.5" />
+        <circle cx="12" cy="10" r="1.5" fill="var(--surface-control)" stroke="currentColor" strokeWidth="1.5" />
+        <circle cx="9.5" cy="14.5" r="1.5" fill="var(--surface-control)" stroke="currentColor" strokeWidth="1.5" />
       </svg>
-      <span>Appearance</span>
+      <span>Wallpaper</span>
     </button>
   );
 }
@@ -239,10 +255,10 @@ export function BackgroundSettingsTrigger() {
 type DialogProps = {
   dialogRef: RefObject<HTMLDialogElement | null>;
   isOpen: boolean;
-  selected: BackgroundChoice;
-  preview: BackgroundChoice;
+  selected: WallpaperChoice;
+  preview: WallpaperChoice;
   storageError: string;
-  onPreview: (choice: BackgroundChoice) => void;
+  onPreview: (choice: WallpaperChoice) => void;
   onApply: () => void;
   onReset: () => void;
   onClose: () => void;
@@ -265,7 +281,7 @@ function BackgroundSettingsDialog({
     <dialog
       ref={dialogRef}
       className="background-settings-dialog"
-      aria-labelledby="background-dialog-title"
+      aria-labelledby="wallpaper-dialog-title"
       onClose={onDialogClose}
       onCancel={(event) => {
         event.preventDefault();
@@ -279,17 +295,18 @@ function BackgroundSettingsDialog({
         <div className="background-settings-panel">
           <div className="background-settings-heading">
             <div>
-              <p className="ui-text-accent-soft text-xs font-semibold text-[#a56849]">Make it yours</p>
-              <h2 id="background-dialog-title">Background appearance</h2>
+              <p className="ui-text-accent-soft text-xs font-semibold">Make it yours</p>
+              <h2 id="wallpaper-dialog-title">Writing area wallpaper</h2>
               <p className="background-settings-description">
-                Choose a quiet backdrop for your writing space.
+                Choose a quiet backdrop for your note editor. It appears behind the text you write,
+                while the rest of UrSpace keeps its usual look.
               </p>
             </div>
             <button
               type="button"
               data-dialog-close
               onClick={onClose}
-              aria-label="Close background settings"
+              aria-label="Close wallpaper settings"
               className="background-dialog-close"
             >
               <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
@@ -299,7 +316,7 @@ function BackgroundSettingsDialog({
           </div>
 
           <fieldset className="background-gallery">
-            <legend className="sr-only">Choose a background</legend>
+            <legend className="sr-only">Choose a wallpaper for the note editor</legend>
             <button
               type="button"
               aria-pressed={preview === null}
@@ -315,17 +332,17 @@ function BackgroundSettingsDialog({
               </span>
             </button>
 
-            {BACKGROUNDS.map((background) => (
+            {WALLPAPERS.map((wallpaper) => (
               <button
-                key={background.id}
+                key={wallpaper.id}
                 type="button"
-                aria-pressed={preview === background.id}
-                onClick={() => onPreview(background.id)}
-                className={`background-choice ${preview === background.id ? "background-choice-selected" : ""}`}
+                aria-pressed={preview === wallpaper.id}
+                onClick={() => onPreview(wallpaper.id)}
+                className={`background-choice ${preview === wallpaper.id ? "background-choice-selected" : ""}`}
               >
                 <span className="background-choice-preview">
                   <Image
-                    src={background.src}
+                    src={wallpaper.src}
                     alt=""
                     fill
                     sizes="(max-width: 420px) 42vw, 180px"
@@ -333,12 +350,12 @@ function BackgroundSettingsDialog({
                   />
                   <span
                     className="background-choice-preview-dimmer"
-                    style={{ opacity: background.overlay }}
+                    style={{ opacity: wallpaper.overlay }}
                   />
                 </span>
                 <span className="background-choice-name">
-                  {background.name}
-                  {selected === background.id && (
+                  {wallpaper.name}
+                  {selected === wallpaper.id && (
                     <span className="background-current-label">Current</span>
                   )}
                 </span>
@@ -352,6 +369,10 @@ function BackgroundSettingsDialog({
             </p>
           )}
 
+          <p className="background-settings-note">
+            Wallpapers are saved in this browser and only affect the note editor.
+          </p>
+
           <div className="background-settings-footer">
             <button type="button" onClick={onReset} className="background-reset-button">
               Reset
@@ -361,7 +382,7 @@ function BackgroundSettingsDialog({
                 Cancel
               </button>
               <button type="button" onClick={onApply} className="background-apply-button">
-                Apply background
+                Apply wallpaper
               </button>
             </div>
           </div>

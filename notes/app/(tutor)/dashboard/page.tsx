@@ -7,7 +7,7 @@ export const metadata = { title: "Dashboard" };
 
 function StatCard({ label, value }: { label: string; value: number }) {
   return (
-    <HoverLift className="ui-surface-panel h-full rounded-[20px] border px-5 py-4 shadow-sm">
+    <HoverLift className="ui-surface-card h-full rounded-[20px] border px-5 py-4 sm:px-6 sm:py-5">
       <p className="ui-text-muted text-xs font-medium">{label}</p>
       <AnimatedNumber
         value={value}
@@ -23,7 +23,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="mx-auto w-full max-w-6xl">
-      <Reveal className="mb-8">
+      <Reveal className="mb-6 sm:mb-8">
         <p className="ui-text-accent-soft text-[11px] font-bold uppercase tracking-[0.2em]">
           Your personal notebook
         </p>
@@ -32,7 +32,7 @@ export default async function DashboardPage() {
         </h1>
       </Reveal>
 
-      <Stagger className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <Stagger className="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
         <StaggerItem>
           <StatCard label="Total notes" value={stats.total} />
         </StaggerItem>

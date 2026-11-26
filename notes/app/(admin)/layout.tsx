@@ -1,7 +1,7 @@
 import { Suspense, type ReactNode } from "react";
 import { requireStaff } from "@/lib/auth";
 import { ThemeProvider } from "@/app/theme-provider";
-import { BackgroundSettingsProvider } from "@/app/background-settings";
+import { AppBackdrop, BackgroundSettingsProvider } from "@/app/background-settings";
 import AppShell from "@/components/app-shell";
 import { Spinner } from "@/components/ui";
 
@@ -22,6 +22,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
     <ThemeProvider>
       <BackgroundSettingsProvider>
+        <AppBackdrop />
         <div className="urspace-app relative min-h-screen overflow-hidden">
           <Suspense fallback={<ShellFallback />}>
             <AdminShell>{children}</AdminShell>

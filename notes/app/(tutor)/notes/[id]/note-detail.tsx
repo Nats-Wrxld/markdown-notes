@@ -65,7 +65,7 @@ export default function NoteDetail({ note }: { note: DashboardNote }) {
       </Link>
 
       <Enter>
-      <article className="ui-surface-panel rounded-[26px] border p-6 shadow-[0_18px_60px_rgba(65,55,104,0.08)] backdrop-blur-xl sm:p-9">
+      <article className="ui-surface-panel ui-shadow-panel rounded-[26px] border p-6 sm:p-9">
         <AnimatePresence mode="wait" initial={false}>
         {isEditing ? (
           <motion.div key="edit" {...modeMotion}>

@@ -117,7 +117,7 @@ export default function DashboardNotebook({
 
   return (
     <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:gap-10">
-      <section className="ui-surface-panel rounded-[26px] border p-5 shadow-[0_18px_60px_rgba(65,55,104,0.08)] backdrop-blur-xl sm:p-8">
+      <section className="ui-surface-card rounded-[26px] border p-5 sm:p-8">
         <div className="mb-7 flex items-start justify-between gap-4">
           <div>
             <p className="ui-text-accent-soft text-xs font-semibold">A fresh page</p>
@@ -141,7 +141,7 @@ export default function DashboardNotebook({
         />
       </section>
 
-      <section aria-labelledby="notes-heading" className="pt-1 lg:pt-2">
+      <section aria-labelledby="notes-heading" className="lg:pt-8">
         <div className="mb-5 flex items-center justify-between">
           <div>
             <p className="ui-text-accent-soft text-xs font-semibold">Your collection</p>
@@ -214,7 +214,7 @@ export default function DashboardNotebook({
                 <motion.article
                   key={note.id}
                   {...cardMotion}
-                  className="ui-surface-panel rounded-2xl border p-5 shadow-[0_12px_36px_rgba(65,55,104,0.06)] backdrop-blur-xl transition duration-200 hover:-translate-y-0.5 hover:shadow-[0_16px_40px_rgba(65,55,104,0.1)] sm:p-6"
+                  className="ui-surface-card rounded-2xl border p-5 transition duration-200 hover:-translate-y-0.5 sm:p-6"
                 >
                 {editingNoteId === note.id ? (
                   <NoteEditorForm

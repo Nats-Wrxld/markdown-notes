@@ -275,3 +275,112 @@ All code deliverables in brief §20 are implemented. Live end-to-end verificatio
 - This is a confirmed product direction and a planned feature, not a claim that the UI has already been changed or that wallpaper persistence/selection is implemented.
 - The README feature list now labels editor wallpapers as planned and no longer describes photo backgrounds as app-wide personalization.
 - Before implementation, inspect the existing background settings/provider and decide whether to replace, migrate, or remove its current app-shell behavior. Do not silently keep global wallpaper behavior.
+
+## 2026-11-26 — Phase 0: documentation and project audit
+
+### Scope
+Read-only audit. No application code, SQL, environment variable, database row
+or deployment was modified. Eight documents were added under `docs/`
+(`PROJECT_OVERVIEW`, `ARCHITECTURE`, `AUTHENTICATION`, `ENVIRONMENT_SETUP`,
+`KNOWN_ISSUES`, `IMPLEMENTATION_PLAN`, `TESTING_CHECKLIST`, `CHANGELOG`).
+
+### Verified from the repository
+- Next.js 16.4.3 with `cacheComponents` + `partialPrefetching`, React 19.3,
+  TypeScript strict, Tailwind v4, Tiptap 3.32, Zod 4.6.7, `@supabase/ssr`
+  0.12.7, `motion` 14.14, Vitest 5.1.
+- Route groups `(public)`, `(tutor)`, `(account)`, `(admin)` with guards
+  `requireUser` / `requireRole` / `requireStaff`; `/auth/callback` and
+  `/auth/confirm` share `lib/auth-callback.ts`.
+- Notes are server-authoritative; bodies pass a Tiptap node/mark allowlist on
+  write and are re-validated at render.
+- Backgrounds/theme are `localStorage` only; `user_preferences` has **zero**
+  code references.
+
+### Verified from the live Supabase project (`xwebcsemorzywsxdhtja`)
+- `ACTIVE_HEALTHY`, PostgreSQL 17.11.
+- 5 tables, RLS on all 5, 21 policies (17 public + 4 storage), 7 triggers,
+  4 `private` helpers + 4 public functions.
+- `public.ensure_profile()` is **absent** — it exists only in the local,
+  uncommitted `db/schema.sql`.
+- `avatars` bucket exists and is public.
+- 8 auth users vs **5 profiles, all tutors, all active** — zero admins, zero
+  owner; 3 auth users have no profile.
+- 0 notes; 22 audit entries (last 2026-11-14).
+- Identities: 8 email, 1 Google, 1 GitHub; none for Microsoft/Facebook/X/Apple.
+
+### Verified from Vercel
+- Two projects deploy the same repo/branch with root directory `notes`:
+  `urspace` (production `https://urspace-seven.vercel.app`, `READY` at
+  `4c24808`) and `markdown-notes` (`https://markdown-notes-jet.vercel.app`,
+  **HTTP 500**, no env vars).
+- `urspace` production env has only the two public Supabase variables;
+  `SUPABASE_SERVICE_ROLE_KEY` is missing.
+
+### Git state at audit time
+- Local `HEAD` was `73587e0`; `origin/main` was `4c24808` (4 commits ahead,
+  including the OAuth profile-recovery fix `7724205`).
+- Staged but uncommitted: `db/schema.sql`, `lib/auth.ts`,
+  `lib/auth-callback.ts` implementing an `ensure_profile()` RPC approach whose
+  function is not deployed and whose callback base predates `7724205`.
+  It was **not** committed: the work is preserved in `stash@{0}` and the local
+  branch was fast-forwarded to `origin/main` before Phase 3.
+
+### Verification run
+- `npx tsc --noEmit` clean; `npm run lint` 0 problems; `npm test` 34/34;
+  `npm run build` success with 25 route entries.
+- Live HTTP: `/` 200 and `/login` 200 on the canonical alias.
+
+### Outcome
+Phase 0 documentation complete. Backend restoration, owner provisioning,
+profile repair, the service-role key and the duplicate Vercel project all
+require explicit approval before any write.
+
+## 2026-11-26 — Phase 3: UI improvements (wallpaper scope, theme, dashboard)
+
+### Scope
+UI only. No authentication logic, database schema, Supabase configuration,
+server action or API code was modified.
+
+### Added
+- `AppBackdrop` — the static themed application backdrop (gradient + ambient
+  orbs) that replaced the photo layer in the shells.
+- `NoteEditorBackdrop` + `useNoteEditorWallpaper()` — wallpaper rendering inside
+  `.note-editor-shell`, with a per-image dimmer.
+- `.ui-surface-card`, `.ui-shadow-panel`, `--shadow-card/panel/float`,
+  `--brand-terracotta`, `--border-error` tokens; `.note-editor-wallpaper*` and
+  `data-wallpaper` contrast rules.
+
+### Changed
+- `app/background-settings.tsx`: the provider no longer draws a fixed photo; it
+  exposes the chosen wallpaper to the editor. Dialog/trigger copy now reads
+  "Wallpaper" / "Writing area wallpaper". The storage key `urspace:background`
+  is unchanged, so existing choices carry over.
+- `app/rich-text-editor.tsx`: renders the backdrop and marks the shell with
+  `data-wallpaper="true"`, which switches text, toolbar, code, links and
+  placeholders to light-on-dim colours.
+- Route-group layouts (`(tutor)`, `(account)`, `(admin)`): render
+  `<AppBackdrop />`; dashboard, login, navigation and settings backgrounds are
+  unchanged.
+- `app/globals.css`: opaque panels/controls, a darker dark-mode background with
+  lighter panels and brighter muted text, warm shadow tokens replacing
+  purple-tinted arbitrary shadows.
+- Dashboard: stat cards use `ui-surface-card`, `gap-3 sm:gap-4` spacing,
+  `mb-6 sm:mb-8` heading rhythm, and the notes column is top-aligned with the
+  composer panel (`lg:pt-8`).
+- Settings: section renamed "Note editor wallpaper" with editor-specific copy.
+- Theme tokens now replace hardcoded colours in the header logo/focus ring, the
+  editor invalid border, admin settings accent, and the profile/admin note
+  panels.
+
+### Verification
+- `npx tsc --noEmit` clean; `npm run lint` 0 problems; `npm test` 34/34;
+  `npm run build` success (25 route entries).
+- **Not verified visually:** no browser session can reach the authenticated
+  editor (no owner/admin account; login blocked by Phase 1 items), so wallpaper
+  rendering, dark-mode contrast and responsive layouts were checked through
+  code/CSS inspection and the production build only.
+
+### Git
+- Local `main` was fast-forwarded to `origin/main` (`4c24808`) before starting;
+  the superseded `ensure_profile` work remains in `stash@{0}` and was not
+  committed or deployed.

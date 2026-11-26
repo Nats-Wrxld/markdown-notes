@@ -99,7 +99,7 @@ export default function NoteEditorForm({
           placeholder="Give your note a name"
           aria-invalid={Boolean(titleError)}
           aria-describedby={titleError ? `${titleId}-error` : undefined}
-          className="ui-input w-full rounded-xl border px-4 py-3 text-sm outline-none transition focus:ring-4 aria-[invalid=true]:border-[#d88d83]"
+          className="ui-input w-full rounded-xl border px-4 py-3 text-sm outline-none transition focus:ring-4 aria-[invalid=true]:border-[var(--border-error)]"
         />
         {titleError && (
           <p id={`${titleId}-error`} role="alert" className="ui-text-error mt-2 text-xs font-medium">

@@ -35,7 +35,7 @@ export default function SettingsForm({
           type="checkbox"
           name="allowPublicSignup"
           defaultChecked={allowPublicSignup}
-          className="mt-0.5 size-4 accent-[#655294]"
+          className="mt-0.5 size-4 accent-[var(--accent-lavender)]"
         />
         <span>
           <span className="ui-text-primary block text-sm font-semibold">Allow public signup</span>
