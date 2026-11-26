@@ -58,8 +58,14 @@ API layer were not modified.
   reachable in this session (no owner/admin account; login blocked by Phase 1
   items), so those visual checks remain outstanding.
 
-**Deployment status:** pushed to `main`; Vercel build status recorded in the
-implementation log once verified.
+**Commit:** `da9eaec`.
+
+**Deployment status:** deployed to production on `https://urspace-seven.vercel.app`
+(Vercel project `urspace`, deployment `dpl_5A5atWGCdCmqq6MQCKKNPDSsgct2`), state
+`READY`, promoted to production. `/` and `/login` return 200; the production CSS
+bundle contains the new editor-wallpaper rules and no longer contains the
+app-wide photo layer. The authenticated editor itself was not opened in this
+session.
 
 ---
 

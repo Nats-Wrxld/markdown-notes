@@ -174,7 +174,7 @@ this audit.
 
 | # | Check | Result |
 | --- | --- | --- |
-| 11.1 | Vercel production deployment `READY` | `[x]` `urspace` project, commit `4c24808` |
+| 11.1 | Vercel production deployment `READY` | `[x]` `urspace` project, commit `da9eaec` (`READY`, promoted) |
 | 11.2 | Canonical alias serves the app | `[x]` `https://urspace-seven.vercel.app/` → 200, correct `<title>` |
 | 11.3 | `/login` on production | `[x]` 200 |
 | 11.4 | Duplicate project alias | `[!]` `https://markdown-notes-jet.vercel.app/` → **500** |

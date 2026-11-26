@@ -380,6 +380,15 @@ server action or API code was modified.
   rendering, dark-mode contrast and responsive layouts were checked through
   code/CSS inspection and the production build only.
 
+### Deployment
+- Pushed to `main` as `da9eaec`; Vercel deployment
+  `dpl_5A5atWGCdCmqq6MQCKKNPDSsgct2` reached `READY` and was promoted to
+  production on `https://urspace-seven.vercel.app`.
+- Verified live: `/` and `/login` return 200; the production CSS bundle contains
+  the `note-editor-wallpaper` / `data-wallpaper` rules and no longer contains
+  `app-background-photo` or `app-background-dimmer`. The authenticated editor
+  was not opened.
+
 ### Git
 - Local `main` was fast-forwarded to `origin/main` (`4c24808`) before starting;
   the superseded `ensure_profile` work remains in `stash@{0}` and was not
