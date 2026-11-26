@@ -25,6 +25,9 @@ async function LoginAlerts({
       {params.error === "oauth" && (
         <Alert>Social sign-in didn’t complete. Try again, or use email below.</Alert>
       )}
+      {params.error === "profile" && (
+        <Alert>Your sign-in succeeded, but your UrSpace profile couldn’t be loaded. Please try again or contact support.</Alert>
+      )}
     </>
   );
 }
