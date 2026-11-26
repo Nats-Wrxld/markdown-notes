@@ -135,12 +135,13 @@ but has **never been proven end-to-end** against the live database.
 
 | # | Check | Result |
 | --- | --- | --- |
-| 8.1 | Wallpaper selectable for the writing area | `[x]` implemented (per-note storage not implemented) |
+| 8.1 | Wallpaper selectable for the writing area | `[x]` implemented — Notes options menu and Settings → Notes (per-note storage not implemented) |
 | 8.2 | Wallpaper rendered only inside the editor | `[x]` `NoteEditorBackdrop` inside `.note-editor-shell` (code + build) |
 | 8.3 | App background unaffected | `[x]` static `AppBackdrop`; no photo layer in the shells |
-| 8.4 | Text readability over wallpaper | `[x]` dimmer + light text/code/link overrides — **not visually checked** |
-| 8.5 | Works in light and dark themes | `[x]` wallpaper contrast is theme-independent — not visually checked |
-| 8.6 | Existing app-wide background removed | `[x]` replaced by the static themed backdrop (intended change) |
+| 8.4 | Text readability over wallpaper | `[x]` dark `--wallpaper-wash` + light text/code/link overrides — **not visually checked** |
+| 8.5 | Wallpaper fills the editor without gaps or stretching | `[x]` absolute layer + `object-fit: cover`; not visually checked at each breakpoint |
+| 8.6 | Works in light and dark themes | `[x]` wallpaper contrast is theme-independent — not visually checked |
+| 8.7 | Existing app-wide background removed | `[x]` replaced by the static themed backdrop (intended change) |
 
 ---
 

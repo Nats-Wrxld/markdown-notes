@@ -7,6 +7,7 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { EASE, Enter } from "@/components/motion";
 import NoteContent from "@/app/note-content";
 import NoteEditorForm from "@/components/note-editor-form";
+import NoteOptionsMenu from "@/components/note-options-menu";
 import {
   createNote,
   deleteNote,
@@ -116,20 +117,23 @@ export default function DashboardNotebook({
   });
 
   return (
-    <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1.02fr)_minmax(0,0.98fr)] lg:gap-10">
-      <section className="ui-surface-card rounded-[26px] border p-5 sm:p-8">
-        <div className="mb-7 flex items-start justify-between gap-4">
+    <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] xl:gap-8">
+      <section className="ui-surface-card rounded-[26px] border p-4 sm:p-6 lg:p-7">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 sm:mb-5">
           <div>
             <p className="ui-text-accent-soft text-xs font-semibold">A fresh page</p>
             <h2 className="ui-text-primary mt-1.5 font-serif text-xl font-medium tracking-[-0.02em]">
               Capture a thought
             </h2>
           </div>
-          <span className="ui-surface-subtle flex size-10 shrink-0 items-center justify-center rounded-2xl">
-            <svg viewBox="0 0 24 24" fill="none" className="ui-text-accent size-5" aria-hidden="true">
-              <path d="m14.5 5.5 4 4M4 20l4.3-.9L19 8.4a2.1 2.1 0 0 0-3-3L5.3 16.1 4 20Z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </span>
+          <div className="flex shrink-0 items-center gap-2">
+            <span className="ui-surface-subtle hidden size-10 items-center justify-center rounded-2xl sm:flex">
+              <svg viewBox="0 0 24 24" fill="none" className="ui-text-accent size-5" aria-hidden="true">
+                <path d="m14.5 5.5 4 4M4 20l4.3-.9L19 8.4a2.1 2.1 0 0 0-3-3L5.3 16.1 4 20Z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </span>
+            <NoteOptionsMenu />
+          </div>
         </div>
 
         <NoteEditorForm
@@ -141,7 +145,7 @@ export default function DashboardNotebook({
         />
       </section>
 
-      <section aria-labelledby="notes-heading" className="lg:pt-8">
+      <section aria-labelledby="notes-heading" className="min-w-0">
         <div className="mb-5 flex items-center justify-between">
           <div>
             <p className="ui-text-accent-soft text-xs font-semibold">Your collection</p>

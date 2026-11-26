@@ -7,7 +7,13 @@ import { dashboardPathForRole, isStaff, type Profile } from "@/lib/types";
 
 type NavItem = { href: string; label: string };
 
-export default function NavLinks({ profile }: { profile: Profile }) {
+export default function NavLinks({
+  profile,
+  layout = "row",
+}: {
+  profile: Profile;
+  layout?: "row" | "menu";
+}) {
   const pathname = usePathname();
   const reduce = useReducedMotion();
   const homeHref = dashboardPathForRole(profile.role);
@@ -34,6 +40,32 @@ export default function NavLinks({ profile }: { profile: Profile }) {
         const active =
           pathname === item.href ||
           (item.href !== homeHref && pathname.startsWith(`${item.href}/`));
+
+        if (layout === "menu") {
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              role="menuitem"
+              aria-current={active ? "page" : undefined}
+              className="header-menu-link"
+            >
+              <span>{item.label}</span>
+              {active && (
+                <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path
+                    d="m3.5 8.5 3 3 6-7"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              )}
+            </Link>
+          );
+        }
+
         return (
           <Link
             key={item.href}

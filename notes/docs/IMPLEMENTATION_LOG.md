@@ -393,3 +393,49 @@ server action or API code was modified.
 - Local `main` was fast-forwarded to `origin/main` (`4c24808`) before starting;
   the superseded `ensure_profile` work remains in `stash@{0}` and was not
   committed or deployed.
+
+## 2026-11-26 — Phase 3 revision: larger editor, Notes options, top-bar menu
+
+### Scope
+UI only. No authentication logic, database schema, Supabase configuration,
+server action or API code was modified.
+
+### Added
+- `components/note-options-menu.tsx` — a Notes-section dropdown ("Note options")
+  that lists the writing-area wallpaper and its current value, and opens the
+  existing wallpaper dialog.
+- `NavLinks` `layout="menu"` variant for the header dropdown.
+- `app-header-menu-*`, `header-menu-*` and `note-options-*` styles.
+
+### Changed
+- `components/app-header.tsx` is now a client component: brand, identity pill
+  (avatar + display name, shown at every breakpoint) and a gear button. The gear
+  opens a dropdown containing the role-aware navigation, the theme toggle and
+  logout. The separate wallpaper button and the inline nav row were removed; the
+  same destinations and actions remain available.
+- `app/background-settings.tsx`: `useNoteEditorWallpaper()` also returns
+  `openSettings`; the editor backdrop uses the themed dimmer instead of an
+  inline per-image opacity, and the image `sizes` hint matches the wider editor.
+- Dashboard (`dashboard/page.tsx`, `dashboard/notebook.tsx`): container widened to
+  `max-w-7xl`; the composer card is full width up to `xl`, where the notes list
+  becomes a 24rem side column; card padding and heading rhythm reduced so the
+  writing area dominates. The notes header hosts the Note options menu.
+- `components/note-editor-form.tsx` and `components/app-shell.tsx`: tighter
+  vertical spacing around the editor.
+- `app/(account)/settings/page.tsx`: the wallpaper section is now "Notes" and
+  describes note preferences.
+- `app/globals.css`: `.note-editor-shell` is a positioned flex column;
+  `.note-editor-wallpaper` is an absolutely positioned, clipped layer with
+  `object-fit: cover`; the writing area grows to
+  `clamp(20rem, 46vh, 34rem)` at `lg` with no max-height cap and larger type;
+  `--wallpaper-wash` provides a dark scrim in both themes so the existing
+  light-on-dark text overrides stay readable; toolbar and link row sit above the
+  wallpaper.
+
+### Verification
+- `npx tsc --noEmit` clean; `npm run lint` 0 problems; `npm test` 34/34;
+  `npm run build` success.
+- **Not verified visually:** authenticated pages remain unreachable (no
+  owner/admin account; login blocked by Phase 1 items), so the editor size,
+  dropdowns and responsive layouts were checked through code/CSS inspection and
+  the production build only.

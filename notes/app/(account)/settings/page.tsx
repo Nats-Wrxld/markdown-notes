@@ -31,10 +31,11 @@ export default function SettingsPage() {
 
         <Reveal delay={0.08}>
           <section className="ui-surface-panel rounded-[24px] border p-7 shadow-sm sm:p-8">
-            <h2 className="ui-text-primary font-serif text-xl font-medium">Note editor wallpaper</h2>
+            <h2 className="ui-text-primary font-serif text-xl font-medium">Notes</h2>
             <p className="ui-text-muted mt-1.5 mb-6 text-sm leading-6">
-              Choose a backdrop for your note editor — five hand-picked scenes, or keep it plain.
-              The rest of UrSpace keeps its usual look.
+              Note preferences for your writing area. Choose a wallpaper — five hand-picked scenes,
+              or keep it plain. It only fills the note editor; the rest of UrSpace keeps its usual
+              look.
             </p>
             <BackgroundSettingsTrigger />
           </section>

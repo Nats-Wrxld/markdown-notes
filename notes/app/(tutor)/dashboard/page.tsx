@@ -22,8 +22,8 @@ export default async function DashboardPage() {
   const stats = summarizeNotes(notes);
 
   return (
-    <div className="mx-auto w-full max-w-6xl">
-      <Reveal className="mb-6 sm:mb-8">
+    <div className="mx-auto w-full max-w-7xl">
+      <Reveal className="mb-5 sm:mb-6">
         <p className="ui-text-accent-soft text-[11px] font-bold uppercase tracking-[0.2em]">
           Your personal notebook
         </p>
@@ -32,7 +32,7 @@ export default async function DashboardPage() {
         </h1>
       </Reveal>
 
-      <Stagger className="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
+      <Stagger className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
         <StaggerItem>
           <StatCard label="Total notes" value={stats.total} />
         </StaggerItem>

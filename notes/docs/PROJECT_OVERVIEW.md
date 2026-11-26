@@ -90,8 +90,8 @@ agreed but not built.
 ### 3.5 Account
 - **Implemented, unverified:** `/profile` — display name, avatar
   upload/replace/remove, password change, read-only account details.
-- **Implemented, unverified:** `/settings` — theme toggle, wallpaper picker,
-  link to profile.
+- **Implemented, unverified:** `/settings` — theme toggle, Notes section with the
+  wallpaper picker, link to profile.
 
 ### 3.6 Administration
 - **Implemented, unverified:** `/admin` overview (stats, recent notes, recent
@@ -112,7 +112,9 @@ agreed but not built.
   stored in `localStorage` (`urspace:background`).
 - **Current behaviour:** the wallpaper is rendered **inside the note editor** only
   (`NoteEditorBackdrop` inside `.note-editor-shell`); the app shells use a static
-  themed backdrop and keep their surfaces unchanged.
+  themed backdrop and keep their surfaces unchanged. It is chosen from the Note
+  options menu in the notes section or from Settings → Notes; the top bar holds
+  only the identity pill and a settings gear menu.
 
 ### 3.8 Planned, not implemented
 - **Cross-device wallpaper persistence** (today it is per-browser, like the theme).

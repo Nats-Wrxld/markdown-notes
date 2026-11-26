@@ -212,21 +212,21 @@ export function NoteEditorBackdrop() {
         src={wallpaper.src}
         alt=""
         fill
-        sizes="(max-width: 1024px) 100vw, 560px"
+        sizes="(max-width: 640px) 100vw, (max-width: 1280px) 90vw, 1100px"
         className="note-editor-wallpaper-photo"
         onError={context.onImageError}
       />
-      <div
-        className="note-editor-wallpaper-dimmer"
-        style={{ opacity: Math.min(0.82, wallpaper.overlay + 0.2) }}
-      />
+      <div className="note-editor-wallpaper-dimmer" />
     </div>
   );
 }
 
 export function useNoteEditorWallpaper() {
   const context = useContext(WallpaperContext);
-  return { wallpaper: context?.wallpaper ?? null };
+  return {
+    wallpaper: context?.wallpaper ?? null,
+    openSettings: context?.openSettings ?? (() => {}),
+  };
 }
 
 export function BackgroundSettingsTrigger() {

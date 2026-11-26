@@ -138,7 +138,7 @@ explicit approval.
 - Previously, `BackgroundSettingsProvider` wrapped `(tutor)`, `(account)` and
   `(admin)` layouts and rendered the chosen photo in a fixed `.app-background`
   layer.
-- `BackgroundSettingsTrigger` is in the global header and on `/settings`.
+- `BackgroundSettingsTrigger` was in the global header and on `/settings`.
 
 **Impact (historical):** contradicted the Phase 3A requirement that wallpapers be restricted
 to the note-writing area. The feature exists, but in the wrong scope; it is
@@ -146,8 +146,9 @@ to the note-writing area. The feature exists, but in the wrong scope; it is
 
 **Resolution:** the photo layer is gone from all shells. The provider now exposes
 `NoteEditorBackdrop`, rendered inside `.note-editor-shell` only, and the app uses
-the static themed `AppBackdrop`. The trigger is still in the header and on
-`/settings` so the writing-area wallpaper remains reachable.
+the static themed `AppBackdrop`. The header trigger was removed in the Phase 3
+revision; the wallpaper is now reached from the Notes options menu and from
+Settings → Notes.
 
 ---
 

@@ -7,6 +7,69 @@ sources available at the time of writing.
 
 ---
 
+## 2026-11-26 — Phase 3 revision: larger editor, Notes options, top-bar menu
+
+**Change:** UI only. The note editor now uses most of the viewport, the wallpaper
+control moved out of the top bar into a Notes options menu, and the top bar was
+reduced to the identity pill plus a settings gear that opens the existing
+navigation, theme and logout controls.
+
+**Files changed**
+- `components/app-header.tsx` — client component: brand, identity pill
+  (avatar + display name, visible on every breakpoint) and a gear button that
+  opens a dropdown with the nav links, theme toggle and logout. The standalone
+  wallpaper button was removed.
+- `components/nav-links.tsx` — added a `layout="menu"` variant for the dropdown;
+  the existing inline row layout is unchanged.
+- `components/note-options-menu.tsx` (new) — Notes options dropdown in the notes
+  section, containing the writing-area wallpaper entry and its current value.
+- `app/background-settings.tsx` — `useNoteEditorWallpaper()` also exposes
+  `openSettings()`; the backdrop relies on the themed scrim instead of a
+  per-image inline opacity.
+- `app/(tutor)/dashboard/notebook.tsx`, `dashboard/page.tsx` — the editor card is
+  full width until `xl`, where the notes list becomes a 24rem side column; reduced
+  card padding and heading rhythm; page container widened to `max-w-7xl`.
+- `components/note-editor-form.tsx`, `components/app-shell.tsx` — tighter
+  vertical rhythm around the editor.
+- `app/(account)/settings/page.tsx` — section retitled "Notes".
+- `app/globals.css` — the editor shell is now a positioned flex column; the
+  wallpaper layer is absolutely positioned with `object-fit: cover` inside it;
+  larger responsive writing height (up to `clamp(20rem, 46vh, 34rem)` at `lg`)
+  with no max-height cap; theme-aware `--wallpaper-wash` dimmer; header menu and
+  Notes options styles.
+
+**Reason:** the previous Phase 3 pass left the composer in a small half-width
+column, kept a separate wallpaper button in the header and positioned the photo
+without a sized container. This revision makes the writing area the focus,
+contextualises the wallpaper under Notes, and guarantees the photo covers the
+editor box at every size.
+
+**Behaviour changes**
+- The editor is substantially wider (full width below `xl`, the dominant column
+  above it) and taller, with less surrounding padding.
+- Wallpaper is chosen from Note options in the notes section or Settings → Notes.
+  The saved `urspace:background` value is unchanged and still applies only inside
+  the editor.
+- The wallpaper layer is clipped to the editor and always covers it edge-to-edge;
+  the dimmer uses a dark wash in both themes, so the editor keeps light-on-dark
+  text and the existing contrast overrides remain valid.
+- The top bar keeps the profile picture and username bubble; a single gear menu
+  holds navigation, theme and logout. No navigation target or action was removed.
+
+**Tests performed**
+- `npx tsc --noEmit` — clean.
+- `npm run lint` — 0 problems.
+- `npm test` — 34/34 pass.
+- `npm run build` — success.
+
+**Not verified**
+- No browser or screenshot review of the editor, the dropdowns, or the
+  desktop/tablet/mobile layouts. Authenticated pages are still unreachable in
+  this session (no owner/admin account; login blocked by Phase 1 items), so the
+  responsive and visual checks remain outstanding.
+
+---
+
 ## 2026-11-26 — Phase 3: editor-scoped wallpapers and theme/surface consistency
 
 **Change:** UI only. The photo background moved out of the application shell and

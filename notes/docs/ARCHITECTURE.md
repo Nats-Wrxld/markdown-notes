@@ -60,8 +60,10 @@ Partial Prerender (`◐`) at build time.
 ### 2.2 Shared UI
 
 - `components/app-shell.tsx` — header + `<main>` + footer chrome.
-- `components/app-header.tsx` — brand, role-aware `NavLinks`, theme toggle,
-  background trigger, identity pill with avatar, logout.
+- `components/app-header.tsx` — brand, identity pill with avatar, and a settings
+  gear dropdown containing the role-aware `NavLinks`, theme toggle and logout.
+- `components/note-options-menu.tsx` — Notes-section options dropdown; hosts the
+  writing-area wallpaper entry that opens the wallpaper dialog.
 - `components/ui.tsx` — client primitives (`Button`, `Input`, `Alert`,
   `Spinner`, `EmptyState`, `Skeleton`, `SubmitButton`, `CurrentYear`).
 - `components/motion.tsx` — motion primitives (`Reveal`, `Stagger`,
@@ -80,8 +82,10 @@ Partial Prerender (`◐`) at build time.
   `app/theme-provider.tsx` and persisted in `localStorage["urspace:theme"]`.
 - Editor wallpapers are managed by `app/background-settings.tsx`, persisted in
   `localStorage["urspace:background"]`, and rendered by `NoteEditorBackdrop`
-  inside `.note-editor-shell` only, behind a dimmer. `AppBackdrop` renders the
-  static themed `.app-background` layer with two ambient orbs.
+  inside `.note-editor-shell` only, behind a `--wallpaper-wash` dimmer. The layer
+  is absolutely positioned and `object-fit: cover`, so it always fills the editor
+  box. `AppBackdrop` renders the static themed `.app-background` layer with two
+  ambient orbs.
 
 **Current background scope:** only the note editor renders a photo. The provider
 still wraps the `(tutor)`, `(account)` and `(admin)` shells so its trigger and

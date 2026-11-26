@@ -11,13 +11,16 @@ editor, and security enforced at the database layer — not just in the UI.
 - **Tutor workspace** — rich-text notes (headings, lists, quotes, links, code,
   tasks), tags, instant search, statistics, and a one-time import of legacy
   localStorage notes.
-- **Note editor wallpapers** — users can choose a wallpaper displayed
-  only inside the note-writing/editor area, behind the note content. It does not
-  cover the dashboard, navigation, settings, login, or the rest of the app.
-  A dimming overlay and light text keep note content readable on every option.
+- **Note editor wallpapers** — chosen from the note options menu in the notes
+  section (also on Settings → Notes) and displayed only inside the
+  note-writing/editor area, behind the note content. It does not cover the
+  dashboard, navigation, settings, login, or the rest of the app. The photo is
+  cropped to fill the editor, and a dimming overlay plus light text keep note
+  content readable on every option.
 - **Personalization** — light/dark themes, profile display name, and avatar
-  upload/replace/remove via Supabase Storage. App-wide pages keep a consistent
-  theme without wallpaper backgrounds.
+  upload/replace/remove via Supabase Storage. The top bar keeps the profile
+  bubble and a settings menu with navigation, theme and logout. App-wide pages
+  keep a consistent theme without wallpaper backgrounds.
 - **Authentication** — email/password signup, login, logout, password recovery
   and reset, server-protected routes, role-based redirects, account suspension.
 - **Administration** — tutor management (create, rename, suspend/reactivate,

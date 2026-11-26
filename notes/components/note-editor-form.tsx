@@ -77,7 +77,7 @@ export default function NoteEditorForm({
   const tagsId = `${idPrefix}-tags`;
 
   return (
-    <form action={formAction} className="space-y-5">
+    <form action={formAction} className="space-y-4">
       {note && <input type="hidden" name="noteId" value={note.id} />}
 
       <div>
