@@ -62,11 +62,30 @@ editor box at every size.
 - `npm test` — 34/34 pass.
 - `npm run build` — success.
 
+**Measured layout check**
+- A temporary unauthenticated harness rendered the real header and dashboard
+  (removed before commit). At 1440 the composer card was 768 px wide with a
+  708×414 writing area and the notes column 384 px; at 834 the card was 753 px
+  wide; at 390 and 320 there was no horizontal overflow, and the header, the
+  settings menu panel and the note options panel all fit inside the viewport.
+  The wallpaper layer measured 227×411 inside a 229×413 shell — an exact fill
+  inside the 1 px border.
+
 **Not verified**
-- No browser or screenshot review of the editor, the dropdowns, or the
-  desktop/tablet/mobile layouts. Authenticated pages are still unreachable in
-  this session (no owner/admin account; login blocked by Phase 1 items), so the
-  responsive and visual checks remain outstanding.
+- No paint-level/screenshot review of the editor or the dropdowns: the automated
+  browser tab ran hidden, so captures came back blank and clicks did not commit.
+  The checks above are computed layout and CSS values, not a viewed page.
+  Authenticated pages are still unreachable (no owner/admin account; login
+  blocked by Phase 1 items).
+
+**Commit:** `5d6f215`.
+
+**Deployment status:** deployed to production on `https://urspace-seven.vercel.app`
+(Vercel project `urspace`, deployment `dpl_Bv999pKUkApFYbwHM2vJcTvmUJap`), state
+`READY`, promoted to production. `/` and `/login` return 200. The live CSS bundle
+contains the header-menu, note-options and editor-wallpaper rules, the larger
+`clamp(20rem, 46vh, 34rem)` writing height and the mobile note-options override;
+the old `app-background-photo` layer is absent.
 
 ---
 

@@ -435,7 +435,20 @@ server action or API code was modified.
 ### Verification
 - `npx tsc --noEmit` clean; `npm run lint` 0 problems; `npm test` 34/34;
   `npm run build` success.
-- **Not verified visually:** authenticated pages remain unreachable (no
-  owner/admin account; login blocked by Phase 1 items), so the editor size,
-  dropdowns and responsive layouts were checked through code/CSS inspection and
-  the production build only.
+- Layout measured through a temporary unauthenticated harness rendering the real
+  header and dashboard (removed before commit): at 1440 the composer card is
+  768 px with a 708×414 writing area; at 834 it is 753 px; at 390/320 there is no
+  horizontal overflow and both menus fit the viewport; the wallpaper layer fills
+  the editor shell exactly (227×411 inside 229×413).
+- **Not verified visually:** the automated browser tab ran hidden, so screenshots
+  were blank and clicks did not commit; authenticated pages remain unreachable
+  (no owner/admin account; login blocked by Phase 1 items).
+
+### Deployment
+- Pushed to `main` as `5d6f215`. Vercel deployment
+  `dpl_Bv999pKUkApFYbwHM2vJcTvmUJap` reached `READY` and was promoted to
+  production on `https://urspace-seven.vercel.app`.
+- Live: `/` 200 and `/login` 200. The production CSS bundle contains the
+  `app-header-menu-panel`, `header-menu-link`, the `note-options` mobile
+  override, `--wallpaper-wash` and `min-height:clamp(20rem,46vh,34rem)` rules,
+  and no `app-background-photo` layer.
