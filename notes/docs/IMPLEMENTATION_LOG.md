@@ -262,3 +262,16 @@ All code deliverables in brief §20 are implemented. Live end-to-end verificatio
 3. Add `SUPABASE_SERVICE_ROLE_KEY` to `.env.local` (server-only; never in chat/browser).
 4. Supabase Auth settings: Site URL `http://localhost:3000`; add **four** redirect URLs — `http://localhost:3000/auth/callback`, `http://localhost:3000/auth/confirm`, and the production equivalents of both. Email provider enabled with **"Confirm email" OFF** (no custom email provider/SMTP needed — Supabase's built-in delivery covers recovery links).
 5. Optional social sign-in: enable any of the **six** providers (Google, GitHub, Microsoft/`azure`, Facebook, X/`twitter`, Apple) in Supabase Auth with OAuth app credentials created in each provider's console (see `docs/SETUP.md` §3). All use the callback `https://xwebcsemorzywsxdhtja.supabase.co/auth/v1/callback`; secrets go only into the Supabase dashboard. Until a provider is enabled, its button shows a clear "could not start sign-in" error and email auth is unaffected.
+
+## 2026-11-26 — Product decision: scope wallpapers to the note editor
+
+### Decision
+- Wallpapers are a note-writing feature, not an application-wide background setting.
+- A selected wallpaper appears only within the note editor/writing canvas, behind the text being composed or edited.
+- The dashboard shell, navigation, login, settings, profile pages, and other non-editor surfaces retain the normal UrSpace light/dark theme without wallpaper imagery.
+- The editor must preserve text readability and accessible contrast over every wallpaper option.
+
+### Documentation status
+- This is a confirmed product direction and a planned feature, not a claim that the UI has already been changed or that wallpaper persistence/selection is implemented.
+- The README feature list now labels editor wallpapers as planned and no longer describes photo backgrounds as app-wide personalization.
+- Before implementation, inspect the existing background settings/provider and decide whether to replace, migrate, or remove its current app-shell behavior. Do not silently keep global wallpaper behavior.
