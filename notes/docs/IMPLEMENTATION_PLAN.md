@@ -154,14 +154,60 @@ Build, typecheck, lint and unit tests pass; visual checks at each size are still
 
 ## Phase 4 — API assignment
 
-**Status: NOT STARTED. Must not begin before earlier phases are complete.**
+**Status: IMPLEMENTED (2026-11-27) — authenticated verification pending.**
+See **[API_DESIGN.md](API_DESIGN.md)** (architecture, contract and endpoint
+catalog), **[API_MIGRATION.md](API_MIGRATION.md)** (inventory, phases, risks,
+provider-swap playbook) and **[POSTMAN.md](POSTMAN.md)** (requests and
+limitations).
 
-Planned approach (for approval when reached):
-- Next.js Route Handlers under `app/api/`.
-- Supabase remains the storage/auth layer.
-- Endpoints around notes (list, create, read, update, delete) with Zod
-  validation, session-based authorization and consistent error shapes.
-- Postman collection plus documented run/test instructions.
+All modules now read and write through the API/domain layer. Login, signup,
+logout, password recovery and Google/GitHub OAuth remain on the original flow
+by explicit instruction. No database schema or policy changed.
+
+### Goal
+
+Move UrSpace to an API-driven architecture across every module: one backend API
+layer for data access and business logic, with Supabase behind provider
+adapters, so the frontend depends on our contract rather than on Supabase and a
+provider can be replaced without rewriting the UI.
+
+### Proposed architecture (summary)
+
+- Central layer: `app/api/v1/**` (HTTP) → `lib/api` (auth, policy, errors) →
+  `lib/domain` (business rules) → `lib/ports` → `lib/providers/supabase`
+  (the only place importing `@supabase/*`).
+- Shared `lib/contracts` Zod schemas and DTOs; one `{ data, meta? }` /
+  `{ error: { code, message } }` envelope; one route wrapper.
+- Frontend: the browser calls `/api/v1`; Server Components call the same domain
+  through a typed in-process client (no self-HTTP).
+- Authorization in the domain (roles, ownership, account status), with RLS kept
+  as defence-in-depth so a provider swap cannot remove authorization.
+- Modules covered: auth/session, me/profile/avatar, notes, public settings,
+  admin overview, tutors, admins, notes, audit and platform settings.
+- No database changes; no feature, copy or layout changes.
+
+### Tasks
+
+| # | Task | Status |
+| --- | --- | --- |
+| 4.1 | Audit every Supabase interaction and module access path | Complete — `API_MIGRATION.md` §1 |
+| 4.2 | Target architecture, contracts and endpoint catalog | Complete — `API_DESIGN.md` §2–6 |
+| 4.3 | Phased migration, risks and provider-swap playbook | Complete — `API_MIGRATION.md` §3–6 |
+| 4.4 | Postman preparation for the expanded scope | Complete — `POSTMAN.md` |
+| 4.5 | Review and approve the revised direction | Approved 2026-11-26 (amendments in `API_DESIGN.md` §11) |
+| 4.6 | Phase 1 — foundation (contracts, ports, adapters, HTTP kit) | Complete |
+| 4.7 | Phase 2 — Notes module + Postman | Complete; authenticated CRUD unverified |
+| 4.8 | Phase 3 — identity, session, profile | Complete except login/OAuth (explicitly unchanged) |
+| 4.9 | Phase 4 — public settings and shell consumers | Complete |
+| 4.10 | Phase 5 — admin modules | Complete; role policies unverified live |
+| 4.11 | Phase 6 — decommission direct data access | Complete for data paths; auth exception documented |
+| 4.12 | Phase 7 — provider-swap readiness (optional) | Not started |
+
+### Completion requirement
+
+Every module is served by the API layer, the frontend has no Supabase import,
+Postman and the security matrix pass against real accounts, existing behaviour
+is unchanged, and the boundary check fails any new direct import.
 
 ---
 
@@ -180,12 +226,12 @@ exists), Vercel logs, live application.
 
 | Item | Value |
 | --- | --- |
-| Current phase | **Phase 0 complete; Phase 3 UI implemented; Phase 1/2 backend work pending** |
-| Next action | Backend configuration (Phase 1.2 onward); review the Phase 3 UI on the deployed build |
+| Current phase | **Phase 4 approved; Phase 1 foundation ready to implement; Phase 3 UI implemented; Phase 1/2 backend items pending** |
+| Next action | Implement Phase 1 (`API_MIGRATION.md` §4.1); Phase 2 stays blocked until Phase 1 is tested and reviewed |
 | Phase 1 completion | Not met — service-role key, owner, and profile restoration outstanding |
 | Phase 2 completion | Not met |
 | Phase 3 completion | Code complete and locally verified; visual verification pending |
-| Phase 4 | Not started |
+| Phase 4 | Design approved; Phase 1 ready — no code written |
 | Phase 5 | Not started |
 
 ---
@@ -208,7 +254,7 @@ exists), Vercel logs, live application.
 - Phase 1.1–1.9 (see table).
 - Phase 2 verification matrix.
 - Phase 3 visual review across desktop/tablet/mobile and both themes.
-- Phase 4 API.
+- Phase 4 API design review, then Stages 2–6.
 - Phase 5 verification.
 
 ## Blocked tasks
@@ -228,4 +274,6 @@ exists), Vercel logs, live application.
 | --- | --- | --- | --- |
 | 2026-11-26 | Phase 0 documentation set created | Project brief (Phase 0 mandate) | Committed and pushed after git reconciliation |
 | 2026-11-26 | Phase 3 UI: editor-scoped wallpaper, light/dark surface pass, dashboard spacing | Project brief (Phase 3 mandate) | Applied and pushed to `main` |
+| 2026-11-26 | Phase 4 API architecture, endpoint spec, Postman collection and roadmap (documentation only) | Project brief (Phase 4 mandate) | Superseded by the app-wide revision below; no code or schema change |
+| 2026-11-26 | Phase 4 revised: app-wide API-driven architecture, full Supabase inventory and 7-phase migration plan (documentation only) | Project brief (revised direction) | Awaiting review; no code or schema change |
 | — | No backend, auth, data or production changes | — | None requested |

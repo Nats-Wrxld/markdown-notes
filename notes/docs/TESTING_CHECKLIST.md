@@ -188,7 +188,96 @@ this audit.
 
 ## 12. API tests (Phase 4)
 
-Not applicable — no API layer exists. Do not run until Phase 4 is approved.
+**Status: implemented and partially verified (2026-11-27).** TypeScript, lint,
+74 unit tests and the production build pass. Public/unauthenticated endpoints
+were exercised against the local dev server. Authenticated CRUD, role policies
+and two-account isolation remain `[ ]` because no test account exists and
+`SUPABASE_SERVICE_ROLE_KEY` is absent locally and on Vercel.
+
+Legend: `[x]` verified · `[!]` partially verified / limitation recorded · `[ ]`
+not run.
+
+### 12.1 Contract (local dev server)
+
+| # | Check | Expected | Result |
+| --- | --- | --- | --- |
+| 12.1 | `POST /auth/v1/token` with test account | `200`, access token | `[ ]` no account |
+| 12.2 | `GET /api/v1/notes` | `200`, `data` + `meta` | `[ ]` auth required |
+| 12.3 | `POST /api/v1/notes` | `201`, `Location`, note id | `[ ]` auth required |
+| 12.4 | `GET /api/v1/notes/{id}` | `200`, own note | `[ ]` auth required |
+| 12.5 | `PATCH /api/v1/notes/{id}` | `200`, field changed, others kept | `[ ]` auth required |
+| 12.6 | `DELETE /api/v1/notes/{id}` | `204`, empty body | `[ ]` auth required |
+| 12.7 | Repeat delete | `404`, `not_found` | `[ ]` auth required |
+| 12.8 | `Cache-Control` and `Vary` headers | `private, no-store`; cookie + authorization | `[x]` live: health 200 had both headers + `X-Request-Id` |
+
+### 12.2 Authentication and authorization
+
+| # | Check | Expected | Result |
+| --- | --- | --- | --- |
+| 12.9 | No credential | `401 unauthenticated` | `[x]` live: GET/POST notes, admin overview |
+| 12.10 | Malformed/expired bearer | `401` | `[x]` live: `Bearer not-a-token` → 401 |
+| 12.11 | Cookie session from the browser | `200` | `[ ]` no account |
+| 12.12 | Account A reads B's note id | `404` | `[ ]` no two accounts |
+| 12.13 | Account A patches/deletes B's note | `404`; B unchanged | `[ ]` no two accounts |
+| 12.14 | Suspended account | `403 account_suspended` | `[ ]` unit only |
+| 12.15 | Cookie mutation with foreign `Origin` | `403 csrf_origin_mismatch` | `[ ]` no session |
+| 12.16 | Direct PostgREST read of B's row with A's JWT | empty result (RLS) | `[ ]` not run |
+| 12.17 | Service-role key referenced anywhere under `app/api/` | absent | `[x]` only `lib/providers/supabase/client.ts`
+
+### 12.3 Validation and abuse
+
+| # | Check | Expected | Result |
+| --- | --- | --- | --- |
+| 12.18 | Empty title / empty body / bad tag shape | `400` with `details` | `[x]` unit: contracts + domain |
+| 12.19 | `user_id` supplied in POST body | `400`; no row written | `[x]` unit: strict schema rejects unknown keys |
+| 12.20 | Malformed UUID in path | `400` | `[!]` code path exists; not exercised live |
+| 12.21 | Body over 256 KB | `413` | `[ ]` not run |
+| 12.22 | Non-JSON content type | `415` | `[ ]` not run live |
+| 12.23 | `javascript:` link inside body | rejected as invalid body | `[x]` unit: existing note-document tests |
+| 12.24 | 5xx response body | generic message + request id | `[x]` unit: `api-http.test.ts` |
+
+### 12.4 Module coverage (planned, per migration phase)
+
+Each module must pass its own contract, authorization and regression checks
+before it is considered migrated. See
+[API_MIGRATION.md](API_MIGRATION.md) §2 for the module map.
+
+| # | Module | Checks required | Result |
+| --- | --- | --- | --- |
+| 12.25 | Auth/session | signup, login, logout, password forgot/reset, session probe, suspended routing | `[!]` login flow intentionally unchanged; session probe signed-out verified |
+| 12.26 | OAuth | Google and GitHub initiation; callback unchanged | `[x]` both reached the providers with `redirect_to=/auth/callback`; full round-trip `[ ]` |
+| 12.27 | Me/profile | read, rename, password change, avatar upload/replace/remove, 2 MB and MIME limits | `[ ]` no account |
+| 12.28 | Notes | CRUD, import ≤500, pagination, tag filter, title search | `[ ]` no account; unit coverage only |
+| 12.29 | Public settings | signed-out read; signup toggle honoured; notice rendered; no admin-module import | `[x]` live 200; cache test proves 3 reads → 1 query |
+| 12.30 | Admin overview | counts and recent lists match the previous implementation | `[ ]` no staff account |
+| 12.31 | Admin tutors | list/search/filter, create, rename, suspend/reactivate, reset link, no self/owner modification | `[ ]` no staff account |
+| 12.32 | Admin admins | owner-only list/create; admin gets `403` | `[ ]` no owner account |
+| 12.33 | Admin notes | staff list/detail/edit/delete, tutor isolation, audit entry per mutation | `[ ]` no staff account |
+| 12.34 | Admin audit | staff read only; no HTTP write path | `[ ]` no staff account |
+| 12.35 | Admin settings | owner read/write; staff `403`; public page reflects changes | `[ ]` no owner account |
+| 12.36 | Provider boundary | no `@supabase/*` import outside provider, except the documented auth exception | `[!]` remaining: OAuth button, browser factory, `proxy.ts` |
+| 12.37 | Behaviour parity | dashboard, note detail, profile, admin, landing render as before | `[!]` public pages and signed-out redirects verified; authenticated pages require an account |
+
+Authentication for these runs requires a working test account; creating one is
+blocked by KI-02/KI-04 until the backend items in Phase 1 are resolved.
+
+### 12.5 Phase 1 foundation checks (planned)
+
+Phase 1 adds no product endpoints. These checks prove the foundation without
+changing user-visible behaviour.
+
+| # | Check | Method | Result |
+| --- | --- | --- | --- |
+| 12.38 | Contract schemas accept valid and reject invalid input | `npm test` `contracts.test.ts` | `[x]` 11 tests |
+| 12.39 | Provider rows map to domain/DTO shapes correctly | `npm test` `provider-mappers.test.ts` | `[x]` 8 tests |
+| 12.40 | Provider errors map to the documented status codes | `npm test` `api-http.test.ts` | `[x]` 5 tests |
+| 12.41 | Browser client parses success and error envelopes | `npm test` `api-client.test.ts` | `[x]` 5 tests |
+| 12.42 | Session guards behave unchanged | signed out: `/dashboard` → `/login`; `/admin` → `/login` | `[x]` browser: `/dashboard` landed on `/login` |
+| 12.43 | Session refresh still sets cookies | real request; inspect `Set-Cookie` | `[ ]` no account; `proxy.ts` unchanged |
+| 12.44 | `lib/auth.ts` and `proxy.ts` have no Supabase import | grep | `[!]` `lib/auth.ts` clean; `proxy.ts` intentionally untouched |
+| 12.45 | App parity | `/` 200, `/login` 200, dashboard/admin redirects, no console errors | `[x]` except a dev-only partial-prefetch insight on the redirect; no runtime errors |
+| 12.46 | Build and static checks | `npx tsc --noEmit`, `npm run lint`, `npm run build` | `[x]` all pass |
+| 12.47 | Optional health smoke route | `GET /api/v1/health` → 200 `{ data: { status: "ok" } }` | `[x]` live |
 
 ---
 

@@ -7,6 +7,222 @@ sources available at the time of writing.
 
 ---
 
+## 2026-11-27 — Provider-agnostic REST API implemented; app migrated
+
+**Change:** all application data now flows through `/api/v1` → `lib/domain` →
+`lib/ports` → `lib/providers/supabase`. Server Components use the same domain
+in-process; client forms use typed HTTP adapters. 25 route handlers cover health,
+session, notes, profile/avatar/password, public settings and administration.
+
+**Login is untouched by explicit constraint.** Signup, password login, logout,
+password recovery and Google/GitHub OAuth remain in `app/auth/actions.ts`,
+`components/social-auth-buttons.tsx`, `/auth/callback`, `/auth/confirm` and
+`proxy.ts`. The API only reads the existing session; there is no login endpoint.
+
+**Data-access changes**
+- Added `lib/contracts`, `lib/ports`, `lib/domain`, `lib/api`, `lib/api-client`
+  and `lib/providers/supabase`.
+- Removed note/account/admin Server Actions and `lib/admin.ts`; `lib/notes.ts`
+  keeps only `summarizeNotes`.
+- Supabase access uses explicit columns, bounded pagination (max 100) and
+  provider-error translation. Service role is used only for account creation.
+- Public settings use a 30-second per-instance cache with immediate invalidation
+  after an owner update.
+
+**Verification**
+- `npx tsc --noEmit`, `npm run lint`, `npm run build` pass.
+- `npm test`: **74/74 pass across 10 files**.
+- Live local: health and public settings `200`; signed-out and invalid-bearer
+  requests `401` with the error envelope; unknown route `404`.
+- Browser: `/dashboard` redirects to `/login`; Google and GitHub buttons reach
+  the providers with `redirect_to=/auth/callback`.
+- Public pages `/`, `/login`, `/signup`, `/forgot-password`, `/reset-password`,
+  `/terms` return `200`.
+
+**Measured load-shape evidence**
+- Settings cache test: three reads produce **one** provider query; invalidation
+  causes exactly one new query.
+- Notes list fetches one page with explicit columns; it runs a count only when
+  the page size cannot prove the total, and a summary query only when needed.
+- No timing benchmark was run; no speedup percentage is claimed.
+
+**Not verified / limitations**
+- Authenticated Notes CRUD, profile writes, admin role policies and two-account
+  isolation need a test account.
+- Account provisioning needs `SUPABASE_SERVICE_ROLE_KEY`, absent locally and on
+  Vercel.
+- No deployment of this change yet.
+
+**Commit/deploy:** see the final implementation log entry; deployment is reported
+separately and is not implied by this entry.
+
+## 2026-11-26 — Phase 4 design approved; Phase 1 scope fixed
+
+**Change:** documentation only. The revised app-wide API architecture was
+approved with amendments, and the Phase 1 file/verification plan was recorded.
+No application code was written.
+
+**Approved decisions**
+- App-wide architecture; Notes is the first implementation module.
+- Domain-owned authorization with RLS retained as an additional layer.
+- Server Components use an in-process client; no self-HTTP.
+- Server Actions are **evaluated individually** in Phase 6 — redundant ones are
+  removed, legitimate ones preserved (amends the earlier blanket removal).
+- The existing Supabase session cookie format is kept; no custom session system
+  and no forced re-authentication.
+- Google and GitHub OAuth must keep working in every phase.
+- No schema migration without separate approval; phases stay reversible.
+
+**Phase 1 scope recorded** (`API_MIGRATION.md` §4.1): contracts, session/profile
+ports, Supabase adapters, HTTP kit, shared server/browser clients, session-path
+rewiring in `lib/auth.ts` and `proxy.ts`, and unit tests. No product endpoints,
+no page/action changes, no notes/settings/admin adapters, no OAuth change.
+
+**Files updated**
+- `docs/API_DESIGN.md` — approval record, amended decisions, revised roadmap
+  exit criteria.
+- `docs/API_MIGRATION.md` — expanded Phase 1 file list, tests, non-goals and
+  rollback; Phase 6 Server Action/bearer wording amended.
+- `docs/IMPLEMENTATION_PLAN.md`, `docs/TESTING_CHECKLIST.md` — status and
+  Phase 1 checks.
+
+**Tests performed**
+- None applicable: no code changed. Existing `tsc`/lint/Vitest/build results
+  from `b1315d1` still apply. Phase 1 checks are recorded as `[ ]`.
+
+**Deployment status:** unchanged. Production remains
+`https://urspace-seven.vercel.app` at `b1315d1`.
+
+---
+
+## 2026-11-26 — Phase 4 revised: app-wide API-driven architecture and migration audit
+
+**Change:** documentation only. No route handler, Server Action, database
+object, policy, environment variable or deployment was modified.
+
+**Files added**
+- `docs/API_MIGRATION.md` — every Supabase import and operation (14 files,
+  20 Server Actions, table-by-table inventory), the module coverage matrix, the
+  phased migration (7 phases), risks, boundary enforcement and the
+  provider-swap playbook.
+
+**Files rewritten**
+- `docs/API_DESIGN.md` — replaced the notes-only design with the app-wide,
+  provider-agnostic architecture: layering, enforceable dependency rule,
+  dual transport (browser HTTP / RSC in-process), contract conventions, endpoint
+  catalog for every module, domain-owned authorization, ports and adapters, and
+  the revised roadmap.
+
+**Files updated**
+- `docs/POSTMAN.md` — cookie-first authentication, the transitional bearer
+  bridge, per-module folder plan.
+- `docs/IMPLEMENTATION_PLAN.md` — Phase 4 rewritten as a 7-phase programme with
+  app-wide scope.
+- `docs/ARCHITECTURE.md` §11, `docs/PROJECT_OVERVIEW.md`,
+  `docs/TESTING_CHECKLIST.md` §12, `README.md` — status, links and planned
+  module checks.
+
+**Reason:** the goal is not an API for Notes alone. UrSpace should depend on its
+own backend contract for all modules, keep Supabase-specific logic behind
+adapters, and be able to replace the provider without rewriting the frontend.
+The notes-only design could not deliver that: it left auth, profile, admin and
+public settings on direct SDK access, and left the browser importing Supabase
+for OAuth.
+
+**Audit findings recorded**
+- 14 files import Supabase; the only browser-side call is OAuth in
+  `components/social-auth-buttons.tsx`; avatar uploads already go through a
+  Server Action.
+- Public components (`PlatformNotice`, `SocialSignupOptions`) import the admin
+  data module for platform settings.
+- `lib/admin.ts` performs no role checks itself; admin pages rely on the layout
+  guard plus RLS.
+- Audit coverage is inconsistent: tutor note CRUD is not audited, admin edits
+  are.
+- `avatar_url` stores an absolute Supabase URL, and `NEXT_PUBLIC_SUPABASE_*`
+  exposes the provider in the bundle.
+
+**Decisions recorded**
+- Domain-owned authorization with RLS retained as defence-in-depth (required for
+  portability).
+- Browser → `/api/v1`; Server Components → the same domain in-process, no
+  self-HTTP.
+- Provider ports + Supabase adapters are the only Supabase import site.
+- Migration order: Notes → Identity → Public → Admin → Decommission → optional
+  provider-swap readiness.
+- No schema, feature or copy changes.
+
+**Tests performed**
+- Documentation links verified; Postman collection still parses as v2.1 JSON.
+- No application file changed, so `tsc`, lint, Vitest and build results from
+  `b1315d1` remain unchanged.
+
+**Not verified**
+- No API endpoint exists, so no request was executed. The migration phases are
+  unstarted and every API check remains unchecked in `TESTING_CHECKLIST.md` §12.
+
+**Deployment status:** unchanged. Production remains
+`https://urspace-seven.vercel.app` at `b1315d1`; this commit is documentation
+only.
+
+---
+
+## 2026-11-26 — Phase 4: API architecture, endpoint specification and Postman preparation
+
+**Change:** documentation and test tooling only. No route handler, Server Action,
+database object, policy, environment variable or deployment was modified.
+
+**Files added**
+- `docs/API_DESIGN.md` — audit of the current data flow, the proposed
+  `/api/v1` Notes REST contract, security model, error taxonomy, roadmap
+  (Stages 1–6), and open questions for review.
+- `docs/POSTMAN.md` — import steps, variables, authentication setup, example
+  requests/responses, expected status codes and the Stage 3/5 test matrix.
+- `docs/postman/urspace-api.postman_collection.json` — Postman v2.1 collection
+  with Auth, Notes and Negative-test folders; targets the specified endpoints
+  and returns 404 until Stage 2 is implemented.
+
+**Files updated**
+- `docs/IMPLEMENTATION_PLAN.md` — Phase 4 section replaced with the design
+  summary, task status and "awaiting approval" state.
+- `docs/ARCHITECTURE.md` — corrected the browser→Supabase claim (avatar uploads
+  are server-side actions; the browser only starts OAuth) and added the planned
+  API layer section.
+- `docs/PROJECT_OVERVIEW.md`, `docs/TESTING_CHECKLIST.md`, `README.md` — status
+  and documentation links.
+
+**Reason:** Phase 4 begins with an audit and an approved contract. The existing
+app has no API layer: reads happen in Server Components through `lib/notes.ts`
+and `lib/admin.ts`, writes happen in Server Actions, and the only route handlers
+are `/auth/callback` and `/auth/confirm`. Building endpoints before agreeing on
+authentication, ownership semantics and error shape would risk exposing the
+staff-visible RLS surface through a personal endpoint.
+
+**Decisions recorded**
+- `/api/v1/notes` is always the authenticated caller's own collection; staff
+  oversight is deferred to a separate staff namespace.
+- Two credentials, one authorization model: cookie session for the browser and a
+  validated Supabase bearer token for Postman/scripts; no service-role key.
+- One shared notes service so handlers and actions cannot drift.
+- Page-based pagination consistent with `lib/admin.ts`; cursor pagination
+  deferred.
+- No database changes.
+
+**Tests performed**
+- `node -e` JSON parse of the Postman collection — valid (Postman v2.1 schema).
+- Documentation reviewed against the code paths it cites; no application files
+  changed, so `tsc`, lint and Vitest results are unchanged from `b1315d1`.
+
+**Not verified**
+- No endpoint exists, so no request in the collection has been executed. No
+  Postman run, no live API response and no authenticated API test occurred.
+
+**Deployment status:** unchanged. Production remains
+`https://urspace-seven.vercel.app` at `b1315d1`; this commit is documentation
+only.
+
+---
+
 ## 2026-11-26 — Phase 3 revision: larger editor, Notes options, top-bar menu
 
 **Change:** UI only. The note editor now uses most of the viewport, the wallpaper

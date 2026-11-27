@@ -15,8 +15,9 @@ separate backend service. The backend is:
 2. **Supabase** — authentication (GoTrue), PostgreSQL with Row Level Security,
    and Storage for avatars.
 
-The browser talks directly to Supabase only for (a) OAuth initiation and
-(b) avatar object uploads; everything else goes through the server.
+The browser talks directly to Supabase only to start OAuth. Avatar uploads,
+like every other mutation, go through a Server Action; everything else goes
+through the server.
 
 ```mermaid
 flowchart LR
@@ -36,7 +37,7 @@ flowchart LR
   L -->|Data API + user JWT| D
   L -->|service-role client<br/>provisioning only| S
   B -->|signInWithOAuth| S
-  B -->|upload/remove avatar| O
+  L -->|avatar objects| O
 ```
 
 ---
@@ -416,3 +417,41 @@ Build output for the audited tree: **25 route entries**, no build errors.
    re-authorize, validate, mutate, audit and revalidate.
 6. `AppShell` supplies navigation, theme and background controls shared by the
    tutor, account and admin areas.
+
+---
+
+## 11. Phase 4 target architecture (designed, not implemented)
+
+No route exists under `app/api/` and no provider adapter exists yet. The
+design is in [API_DESIGN.md](API_DESIGN.md); the inventory and migration plan
+are in [API_MIGRATION.md](API_MIGRATION.md).
+
+The target is **API-driven across every module**, not notes-only:
+
+| Layer | Responsibility |
+| --- | --- |
+| `app/api/v1/**` | Thin HTTP handlers: method, status, headers, one domain call |
+| `lib/api/**` | Route wrapper, authentication context, role policies, error mapping, pagination, request id |
+| `lib/domain/**` | Business rules: ownership, roles, validation orchestration, audit decisions |
+| `lib/contracts/**` | Zod schemas and DTOs shared by browser, HTTP and services (provider-free) |
+| `lib/ports/**` | Interfaces for auth, notes, profiles, settings, audit, storage, provisioning |
+| `lib/providers/supabase/**` | The only place importing `@supabase/*`; SDK calls and error translation |
+| `lib/api-client/**` | Browser `fetch` client and server in-process client over the same contract |
+
+Key decisions:
+
+- The browser talks to `/api/v1`; Server Components call the same domain
+  in-process (no self-HTTP). Postman uses the HTTP contract.
+- Authorization lives in the domain (explicit ownership and role checks). RLS
+  remains defence-in-depth, so replacing the database cannot silently remove
+  authorization.
+- Authentication is an HttpOnly session cookie owned by the backend; OAuth moves
+  from the browser SDK to a server redirect endpoint. A bearer token is a
+  transitional bridge for Postman only.
+- Modules: auth/session, me/profile/avatar, notes, public settings, admin
+  overview/tutors/admins/notes/audit/settings.
+- No schema, policy, feature or copy changes during the migration.
+
+Server guards (`requireUser`/`requireRole`) redirect, so the API uses its own
+authentication context helper. The three boundaries remain: route policy,
+domain ownership check, RLS.

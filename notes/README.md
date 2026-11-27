@@ -69,7 +69,26 @@ configuration, owner provisioning, verification, and Vercel deployment.
 | `npm run build` | Production build |
 | `npm run start` | Serve the production build |
 | `npm run lint` | ESLint |
-| `npm test` | Vitest unit tests (validation, sanitization, role logic) |
+| `npm test` | Vitest unit tests (contracts, domain rules, adapters, clients, validation) |
+
+## REST API
+
+All application data now flows through a provider-neutral backend:
+
+```
+Browser → /api/v1 → lib/domain → lib/ports → lib/providers/supabase
+Server Components → lib/api-client/server → the same domain (in-process)
+```
+
+- Routes live in `app/api/v1/**`; contracts in `lib/contracts`; business rules
+  in `lib/domain`; Supabase access in `lib/providers/supabase`.
+- Responses use `{ data, meta? }` or `{ error: { code, message, requestId } }`,
+  with `Cache-Control: private, no-store` on authenticated data.
+- Notes CRUD, profile/avatar/password, public settings and admin operations are
+  available. There is **no** login or OAuth endpoint: signup, password login,
+  logout, recovery and Google/GitHub sign-in keep their original flow.
+- See [docs/API_DESIGN.md](docs/API_DESIGN.md) for the contract and
+  [docs/POSTMAN.md](docs/POSTMAN.md) for requests and current test limitations.
 
 ## Project layout
 
@@ -78,6 +97,12 @@ app/(public)/    landing, login, signup, recovery, suspended, terms
 app/(tutor)/     dashboard, notes/[id], note actions
 app/(account)/   profile, avatar & password actions
 app/(admin)/     admin overview, tutors, notes, settings, activity
+app/api/v1/      REST endpoints (health, session, me, notes, public, admin)
+lib/contracts/   Zod schemas + wire DTOs
+lib/domain/      business rules and orchestration
+lib/ports/       provider-neutral interfaces
+lib/providers/   Supabase adapters (the only data-access implementation)
+lib/api-client/  browser fetch client + in-process server client
 app/auth/        auth server actions + /auth/confirm route handler
 components/      design system, editor form, admin controls
 lib/             auth guards, DALs, validation, Supabase clients
@@ -88,5 +113,10 @@ docs/            SETUP.md, IMPLEMENTATION_LOG.md
 ## Documentation
 
 - [Setup & deployment guide](docs/SETUP.md)
+- [API design (Phase 4)](docs/API_DESIGN.md) — app-wide target architecture,
+  contracts and endpoint catalog; no API is implemented yet.
+- [API migration audit](docs/API_MIGRATION.md) — every Supabase interaction,
+  module coverage, phased migration, risks and provider-swap playbook.
+- [Postman test guide](docs/POSTMAN.md) — collection import, auth and test matrix.
 - [Implementation log](docs/IMPLEMENTATION_LOG.md) — decisions, changes, and
   verification results as the project was built.

@@ -39,7 +39,7 @@ role-based administrative layer for oversight.
 | Separate users' data completely | Implemented in code and in RLS; not yet proven with two live accounts |
 | Give staff (admin/owner) oversight of tutors and their notes | Implemented in code; **not usable live** — no admin or owner account exists (see §7) |
 | Offer calm personalisation (theme, editor wallpaper, avatar) | Implemented; wallpapers render only inside the note editor |
-| Provide a real backend (not just auto-generated DB access) | **Not started** (Phase 4). The app currently uses Supabase's Data API through the SDK plus Next.js Server Actions |
+| Provide a real backend (not just auto-generated DB access) | **Implemented (2026-11-27).** Every data module uses `/api/v1` → domain → ports → Supabase adapters; Server Components use the same domain in-process. Login, signup and OAuth intentionally remain on the original Supabase flow. Authenticated endpoint checks are pending a test account |
 
 ---
 
@@ -121,7 +121,9 @@ agreed but not built.
 - **Cross-device theme/background persistence.** A `user_preferences` table
   exists in the database, but **no code reads or writes it** (verified: zero
   references in `app/`, `components/`, `lib/`).
-- **API layer** via Next.js Route Handlers (Phase 4). Not started.
+- **App-wide API layer** (Phase 4). Designed and awaiting approval
+  (`API_DESIGN.md`, `API_MIGRATION.md`); no `/api` route exists yet and every
+  module still reads/writes Supabase through the server.
 - **Individual workspaces** mentioned in the project brief. No workspace model
   exists in the schema or code.
 
@@ -213,7 +215,7 @@ project configuration lives in the Vercel dashboard.
 | Google/GitHub OAuth | Identities exist for both; full round-trip not re-tested in this audit |
 | Other OAuth providers | Configured buttons; no identities; unverified |
 | Wallpaper-in-editor | **Implemented** — rendered only inside the note editor; visual review pending |
-| API layer | **Not started** |
+| API layer | **App-wide design awaiting approval** — no code |
 
 **Phase 0 outcome:** documentation and audit complete; Phase 1 (backend
 restoration) has been *pre-audited* here but its corrective actions require
@@ -232,7 +234,7 @@ approval (see `IMPLEMENTATION_PLAN.md`).
 3. **Phase 3 — UI improvements (implemented 2026-11-26):** note-editor-only wallpapers; card/panel
    cohesion; light-mode consistency; dark-mode contrast and surface hierarchy;
    dashboard layout and responsive review.
-4. **Phase 4 — API assignment:** Next.js Route Handlers over Supabase for
-   notes (and supporting resources), with validation, auth checks, Postman
-   tests and documentation.
+4. **Phase 4 — API-driven architecture (revised design 2026-11-26):** one
+   backend API layer for every module, Supabase behind provider adapters,
+   provider-neutral authorization, Postman tests and a phased migration.
 5. **Phase 5 — Final verification and deployment.**

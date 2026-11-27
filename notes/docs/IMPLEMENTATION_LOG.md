@@ -452,3 +452,207 @@ server action or API code was modified.
   `app-header-menu-panel`, `header-menu-link`, the `note-options` mobile
   override, `--wallpaper-wash` and `min-height:clamp(20rem,46vh,34rem)` rules,
   and no `app-background-photo` layer.
+
+## 2026-11-26 — Phase 4 API architecture and Postman preparation (design only)
+
+### Inspected
+- All database access in `app/`, `lib/` and `components/`: `lib/notes.ts`
+  (`getMyNotes`, `getMyNote`), `lib/admin.ts` (tutor/note/audit/settings
+  queries and counts), `lib/auth.ts` (`getCurrentProfile`), `lib/audit.ts`,
+  `lib/auth-callback.ts`, the three `actions.ts` files and the avatar action.
+- Frontend → Supabase calls: only `components/social-auth-buttons.tsx` starts
+  OAuth in the browser. Avatar uploads are a Server Action, not a browser
+  Storage write; the Phase 0 architecture note was corrected.
+- Route handlers: `/auth/callback` and `/auth/confirm` only. No `app/api/`.
+- Authorization: layout guards redirect (`requireUser`/`requireRole`/`requireStaff`),
+  Server Actions re-check with `activeProfile()`, and RLS plus immutability
+  triggers are the final boundary. API handlers therefore need their own
+  non-redirecting auth helper.
+- Schema/RLS: five tables, `(user_id, created_at desc)` and GIN tag indexes,
+  own-row CRUD plus staff read/update/delete on tutor notes, `notes.user_id`
+  immutable. No schema change is needed for the proposed API.
+
+### Decisions
+- Route Handlers under `/api/v1`; Server Actions are not used as the API
+  transport.
+- `/api/v1/notes` is always the caller's personal collection. Staff oversight
+  stays out of this module (RLS allows it, the endpoint does not).
+- Two credentials, one authorization model: the existing cookie session for the
+  browser and a Supabase bearer token validated with `auth.getUser(token)` for
+  Postman/scripts. The token-scoped client keeps RLS active. No service-role key
+  in any API path.
+- One shared `lib/notes/service.ts` for handlers now and actions in Stage 4;
+  validation reuses `noteInputSchema` and `note-document.ts`.
+- Page-based pagination matching `lib/admin.ts`; cursor pagination deferred.
+- Envelope `{ data, meta? }` / `{ error: { code, message, details? } }`,
+  `Cache-Control: private, no-store`, same-origin checks for cookie mutations.
+
+### Added
+- `docs/API_DESIGN.md` — audit, decisions, endpoint contract, security model,
+  status-code matrix, roadmap Stages 1–6, open questions.
+- `docs/POSTMAN.md` — import steps, variables, auth, examples, expected codes,
+  test scripts, manual checks.
+- `docs/postman/urspace-api.postman_collection.json` — Auth, Notes and Negative
+  test folders.
+
+### Updated
+- `docs/IMPLEMENTATION_PLAN.md` — Phase 4 status, tasks and completion criteria.
+- `docs/ARCHITECTURE.md` — corrected browser/Supabase statement; added the
+  planned API layer section.
+- `docs/PROJECT_OVERVIEW.md`, `docs/TESTING_CHECKLIST.md`, `README.md` — status
+  and links.
+
+### Verification
+- Postman collection parsed as JSON successfully; collection is v2.1.
+- No application file changed: `git status` lists documentation only. `tsc`,
+  lint, Vitest and build results from `b1315d1` still apply unchanged.
+
+### Not verified
+- No endpoint exists, so no request was executed and no Postman run occurred.
+  Every API test case remains unchecked in `TESTING_CHECKLIST.md` §12.
+
+### Blocked
+- Implementation waits for design approval.
+- Authenticated testing needs a dedicated test account; creating one is still
+  blocked by KI-02 (no service-role key on Vercel) and KI-04 (missing profiles).
+
+## 2026-11-26 — Phase 4 revised: app-wide API-driven architecture
+
+### Inspected
+- Every Supabase import and operation across `app/`, `lib/`, `components/`,
+  `proxy.ts` and `next.config.ts`: 14 import sites (3 client factories,
+  `lib/auth.ts`, `lib/notes.ts`, `lib/admin.ts`, `lib/audit.ts`,
+  `lib/auth-callback.ts`, four action files, one component, `proxy.ts`).
+- 20 exported Server Actions across auth, tutor, account and admin modules.
+- Browser-side usage: only `components/social-auth-buttons.tsx` (OAuth). Avatar
+  uploads are server-side. `user_preferences` has no code at all.
+- Consumers: every page/component that reads `lib/notes.ts`, `lib/admin.ts` or
+  `lib/auth.ts`, including public components importing the admin DAL.
+- Authorization: layout guards + RLS; `lib/admin.ts` has no role checks itself.
+
+### Findings
+- Public UI depends on `lib/admin.ts` for platform settings.
+- Admin authorization is partly layout-only, so moving queries into services
+  requires explicit role checks.
+- Audit coverage is inconsistent (tutor note CRUD is not audited).
+- `avatar_url` stores an absolute Supabase URL; `next.config.ts` derives image
+  hosts from the provider env; `NEXT_PUBLIC_SUPABASE_*` ships the provider name.
+- Avatar update is a multi-step write with compensation and must stay atomic in
+  one service operation.
+- `notes.user_id` references `auth.users`, not `profiles`, which matters for any
+  future provider swap.
+
+### Decisions
+- App-wide scope: auth/session, me/profile/avatar, notes, public settings,
+  admin overview/tutors/admins/notes/audit/settings.
+- Layering: `app/api/v1` → `lib/api` → `lib/domain` → `lib/ports` →
+  `lib/providers/supabase`; `lib/contracts` shared by all callers.
+- Browser uses HTTP `/api/v1`; RSC uses an in-process typed client over the same
+  domain (no self-HTTP).
+- Domain-owned authorization; RLS retained as defence-in-depth so a provider
+  swap cannot silently remove authorization.
+- Migration order: foundation → notes → identity → public → admin →
+  decommission → optional provider-swap readiness.
+- No schema, feature, copy or layout changes.
+
+### Added
+- `docs/API_MIGRATION.md` — inventory, module matrix, phases, risks, boundary
+  enforcement, provider-swap playbook.
+
+### Rewritten / updated
+- `docs/API_DESIGN.md` (v2), `docs/POSTMAN.md`, `docs/IMPLEMENTATION_PLAN.md`
+  Phase 4, `docs/ARCHITECTURE.md` §11, `docs/PROJECT_OVERVIEW.md`,
+  `docs/TESTING_CHECKLIST.md` §12, `README.md`, `docs/CHANGELOG.md`.
+
+### Verification
+- Postman collection still parses as v2.1 JSON.
+- Documentation links verified; no application file changed, so the previous
+  `tsc`/lint/Vitest/build results still apply.
+
+### Not verified
+- No endpoint exists and no phase has started; no API request was executed.
+- Phase 2 testing still needs a dedicated test account (KI-02/KI-04).
+
+### Blocked
+- Implementation waits for design approval.
+
+## 2026-11-26 — Phase 4 design approved; Phase 1 scope fixed
+
+### Approved
+- App-wide API architecture; Notes is the first module.
+- Domain-owned authorization; RLS retained as defence-in-depth.
+- In-process Server Components (no self-HTTP).
+- Server Actions evaluated individually in Phase 6 — redundant ones removed,
+  legitimate ones preserved.
+- Supabase session cookie format kept; no custom session, no forced re-login.
+- OAuth must keep working through every phase; no service-role exposure; no
+  schema migration without separate approval; phases independently testable and
+  reversible.
+
+### Phase 1 (recorded, not started)
+Contracts, session/profile ports, Supabase adapters, HTTP kit and shared
+server/browser clients. Only `lib/auth.ts` and `proxy.ts` are rewired; no pages,
+actions, endpoints or OAuth changes. Full scope, file list, tests, non-goals and
+rollback are in `docs/API_MIGRATION.md` §4.1; checks are in
+`docs/TESTING_CHECKLIST.md` §12.5.
+
+### Verification
+- Documentation only; no code changed, so previous `tsc`/lint/Vitest/build
+  results still apply.
+- Phase 1 checks remain unchecked until implementation.
+
+### Next
+- Implement Phase 1 after the breakdown is reviewed.
+- Phase 2 stays blocked until Phase 1 is implemented, tested and reviewed.
+
+## 2026-11-27 — REST API implementation and frontend migration
+
+### Built
+- `lib/contracts/{common,profile,note,admin}.ts` — strict Zod inputs and wire DTOs.
+- `lib/ports/{index,errors}.ts` — provider-neutral interfaces and error codes.
+- `lib/providers/supabase/{client,mappers,errors,scope}.ts` — the only data
+  implementation; explicit columns and provider error translation.
+- `lib/domain/{session,context,audit,notes,profile,settings,admin}.ts` — ownership,
+  roles, suspension, validation, audit and cache invalidation.
+- `lib/api/{handler,request,response,errors,policies,serialize}.ts` — one wrapper,
+  request ids, origin checks, body limits, `private, no-store`.
+- 25 route files under `app/api/v1/**`.
+- `lib/api-client/{http,form-state,notes,profile,admin,server}.ts` — browser HTTP
+  adapters and the in-process server client.
+- UI migration: dashboard, note detail/import/editor, profile forms/avatar,
+  admin overview, tutors, tutor detail/notes, oversight, activity, settings.
+
+### Removed
+- `app/(tutor)/actions.ts`, `app/(account)/actions.ts`, `app/(admin)/actions.ts`.
+- `lib/admin.ts` data access; `lib/notes.ts` now exports only `summarizeNotes`.
+
+### Deliberately unchanged
+- `app/auth/actions.ts`, `app/auth/callback/route.ts`,
+  `app/auth/confirm/route.ts`, `lib/auth-callback.ts`, `proxy.ts`,
+  `components/social-auth-buttons.tsx` and both login/signup pages.
+- `lib/supabase/{server,admin}.ts` remain compatibility shims so auth code
+  compiles without edits.
+
+### Verification (commands actually run)
+- `npx tsc --noEmit` — clean.
+- `npm run lint` — clean.
+- `npm test` — 74 tests in 10 files passed.
+- `npm run build` — succeeded; API routes dynamic (`ƒ`).
+- Live local: `/api/v1/health` 200, `/api/v1/public/settings` 200,
+  signed-out `/api/v1/auth/session` 200 with nulls, notes/admin 401,
+  invalid bearer 401, unknown route 404.
+- Public pages 200; `/dashboard` redirected to `/login` in the browser.
+- Google and GitHub OAuth initiation reached the providers with
+  `redirect_to=http://127.0.0.1:3000/auth/callback`; full provider round-trip not
+  completed because no test credentials were entered.
+
+### Not verified
+- Notes CRUD/import, profile writes, avatar, admin actions and role boundaries.
+- Two-account isolation and RLS behaviour through the new API.
+- Service-role provisioning (`SUPABASE_SERVICE_ROLE_KEY` absent).
+- Deployment of this change.
+
+### Notes
+- A dev-only "Could not validate instant UI" message appears when a streamed
+  layout redirects to `/login`; navigation is correct and production build
+  succeeds. Tracked as a framework/dev diagnostic, not a functional failure.
