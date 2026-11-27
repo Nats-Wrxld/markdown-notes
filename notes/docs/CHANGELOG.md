@@ -11,8 +11,9 @@ sources available at the time of writing.
 
 **Change:** all application data now flows through `/api/v1` → `lib/domain` →
 `lib/ports` → `lib/providers/supabase`. Server Components use the same domain
-in-process; client forms use typed HTTP adapters. 25 route handlers cover health,
-session, notes, profile/avatar/password, public settings and administration.
+in-process; client forms use typed HTTP adapters. 20 route handlers (31
+operations) cover health, session, notes, profile/avatar/password, public
+settings and administration.
 
 **Login is untouched by explicit constraint.** Signup, password login, logout,
 password recovery and Google/GitHub OAuth remain in `app/auth/actions.ts`,
@@ -51,10 +52,15 @@ password recovery and Google/GitHub OAuth remain in `app/auth/actions.ts`,
   isolation need a test account.
 - Account provisioning needs `SUPABASE_SERVICE_ROLE_KEY`, absent locally and on
   Vercel.
-- No deployment of this change yet.
+- No deployment of this change yet at the time of implementation.
 
-**Commit/deploy:** see the final implementation log entry; deployment is reported
-separately and is not implied by this entry.
+**Deployment (2026-11-27):** commit `c4e19d6` deployed to the existing
+`urspace` Vercel project as `dpl_9Ta3H4idph1EyZN92svbXE1Qk1Zv` (`READY`,
+promoted). Production checks: health/public settings `200`, session `200`,
+notes/admin `401`, `/`, `/login`, `/signup`, `/terms` `200`, `/dashboard` →
+`/login`, Google OAuth reaches Google with
+`redirect_to=https://urspace-seven.vercel.app/auth/callback`. Authenticated
+production CRUD remains unverified for the same test-account reason.
 
 ## 2026-11-26 — Phase 4 design approved; Phase 1 scope fixed
 

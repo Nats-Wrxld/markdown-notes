@@ -477,7 +477,7 @@ Phase detail, risks and rollback are in
 
 | Item | State |
 | --- | --- |
-| API routes | 25 handlers under `/api/v1` (health, session, me, notes, public, admin) |
+| API routes | 20 route handlers (31 operations) under `/api/v1` (health, session, me, notes, public, admin) |
 | Contracts/ports/adapters | Implemented in `lib/contracts`, `lib/ports`, `lib/providers/supabase` |
 | Domain services | Implemented in `lib/domain`; all frontend reads and writes use them |
 | Direct Supabase imports | Provider adapters, the three `lib/supabase/**` compatibility shims, `proxy.ts`, the untouched OAuth button and `next.config.ts` |

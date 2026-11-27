@@ -11,7 +11,7 @@ phased migration, risks, boundary enforcement and the provider-swap playbook.
 | --- | --- |
 | Contracts, ports, Supabase adapters | Implemented |
 | Domain services (session, notes, profile, settings, admin, audit) | Implemented |
-| HTTP kit + `/api/v1` routes (25 handlers) | Implemented |
+| HTTP kit + `/api/v1` routes (20 route handlers, 31 operations) | Implemented |
 | Browser + in-process server clients | Implemented |
 | Notes UI, profile, public settings, admin UI | Migrated to the API/domain layer |
 | Redundant Server Actions | Removed (note, account, admin); auth actions retained |

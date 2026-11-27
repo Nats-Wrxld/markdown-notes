@@ -616,7 +616,7 @@ rollback are in `docs/API_MIGRATION.md` §4.1; checks are in
   roles, suspension, validation, audit and cache invalidation.
 - `lib/api/{handler,request,response,errors,policies,serialize}.ts` — one wrapper,
   request ids, origin checks, body limits, `private, no-store`.
-- 25 route files under `app/api/v1/**`.
+- 20 route files (31 operations) under `app/api/v1/**`.
 - `lib/api-client/{http,form-state,notes,profile,admin,server}.ts` — browser HTTP
   adapters and the in-process server client.
 - UI migration: dashboard, note detail/import/editor, profile forms/avatar,
@@ -656,3 +656,19 @@ rollback are in `docs/API_MIGRATION.md` §4.1; checks are in
 - A dev-only "Could not validate instant UI" message appears when a streamed
   layout redirects to `/login`; navigation is correct and production build
   succeeds. Tracked as a framework/dev diagnostic, not a functional failure.
+
+### Deployment (2026-11-27)
+- Project: `urspace` (`prj_0ZkpIpbTPzHDaiPbG5Ck9LtcSnCk`), root `notes/`.
+- Commit: `c4e19d6`; deployment `dpl_9Ta3H4idph1EyZN92svbXE1Qk1Zv` — `READY`,
+  promoted to `https://urspace-seven.vercel.app`.
+- The local Vercel CLI failed in `whoami` with a ByteString header error, so the
+  deployment was created through the connected Vercel integration, pinned to the
+  pushed commit.
+- Production checks: `/api/v1/health` 200 with `private, no-store`,
+  `Vary: Cookie, Authorization` and `X-Request-Id`; `/api/v1/public/settings`
+  200; `/api/v1/auth/session` 200; `/api/v1/notes` and
+  `/api/v1/admin/overview` 401; `/`, `/login`, `/signup`, `/terms` 200.
+- Browser: `/dashboard` → `/login`; Google OAuth reached Google with
+  `redirect_to=https://urspace-seven.vercel.app/auth/callback`.
+- Not verified on production: authenticated CRUD, role boundaries, full OAuth
+  round-trip after provider sign-in.
