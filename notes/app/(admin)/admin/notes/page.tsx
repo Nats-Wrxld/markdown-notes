@@ -1,4 +1,5 @@
-import { getTutorOptions, listNotes, parsePage } from "@/lib/admin";
+import { serverApi } from "@/lib/api-client/server";
+import { parsePage } from "@/lib/contracts/common";
 import AdminNoteCard from "@/components/admin/note-card";
 import { Reveal } from "@/components/motion";
 import Pagination from "@/components/pagination";
@@ -17,8 +18,13 @@ export default async function AdminNotesPage({
   const page = parsePage(params.page);
 
   const [result, tutors] = await Promise.all([
-    listNotes({ page, query, tutorId: tutorId || undefined }),
-    getTutorOptions(),
+    serverApi.admin.listNotes({
+      page,
+      pageSize: 20,
+      q: query,
+      tutorId: tutorId || undefined,
+    }),
+    serverApi.admin.tutorOptions(),
   ]);
 
   return (

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { importLocalNotes } from "@/app/(tutor)/actions";
+import { importLocalNotes } from "@/lib/api-client/notes";
 import { IMPORT_FLAG_KEY, loadNotes, type SavedNote } from "@/app/note-storage";
 
 export default function ImportNotesBanner({

@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import NoteEditorForm from "@/components/note-editor-form";
-import { adminDeleteNote, adminUpdateNote } from "@/app/(admin)/actions";
+import { adminDeleteNote, adminUpdateNote } from "@/lib/api-client/admin";
 import type { DashboardNote } from "@/lib/types";
 
 export default function NoteOversight({ note }: { note: DashboardNote }) {

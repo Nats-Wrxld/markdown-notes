@@ -2,7 +2,7 @@
 
 import { useActionState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { createAccount } from "@/app/(admin)/actions";
+import { createAccount } from "@/lib/api-client/admin";
 import { Alert, Field, Input, SubmitButton } from "@/components/ui";
 
 export default function CreateAccountForm({ canCreateAdmins }: { canCreateAdmins: boolean }) {

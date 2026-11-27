@@ -2,7 +2,7 @@
 
 import { useActionState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { changePassword, updateDisplayName } from "@/app/(account)/actions";
+import { changePassword, updateDisplayName } from "@/lib/api-client/profile";
 import { PasswordField } from "@/components/password-field";
 import { Alert, Field, Input, SubmitButton } from "@/components/ui";
 

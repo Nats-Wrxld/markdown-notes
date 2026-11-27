@@ -7,7 +7,7 @@ import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { EASE, Enter } from "@/components/motion";
 import NoteContent from "@/app/note-content";
 import NoteEditorForm from "@/components/note-editor-form";
-import { deleteNote, updateNote } from "@/app/(tutor)/actions";
+import { deleteNote, updateNote } from "@/lib/api-client/notes";
 import type { DashboardNote } from "@/lib/types";
 
 const dateFormatter = new Intl.DateTimeFormat("en", {

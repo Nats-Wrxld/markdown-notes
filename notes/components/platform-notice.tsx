@@ -1,7 +1,7 @@
-import { getPlatformSettings } from "@/lib/admin";
+import { serverApi } from "@/lib/api-client/server";
 
 export default async function PlatformNotice() {
-  const settings = await getPlatformSettings();
+  const settings = await serverApi.settings.public();
   if (!settings.platformNotice.trim()) return null;
 
   return (

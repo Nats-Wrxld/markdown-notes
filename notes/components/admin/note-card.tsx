@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Avatar from "@/components/avatar";
 import { getDocumentText } from "@/lib/note-document";
-import type { AdminNote } from "@/lib/admin";
+import type { AdminNote } from "@/lib/types";
 
 const dateFormatter = new Intl.DateTimeFormat("en", { dateStyle: "medium" });
 

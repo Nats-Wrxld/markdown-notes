@@ -6,7 +6,7 @@ import {
   sendResetLink,
   setAccountStatus,
   updateAccountName,
-} from "@/app/(admin)/actions";
+} from "@/lib/api-client/admin";
 import { Alert, Field, Input, SubmitButton } from "@/components/ui";
 
 export function AccountStatusButton({

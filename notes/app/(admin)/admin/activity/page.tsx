@@ -1,4 +1,5 @@
-import { listAuditLogs, parsePage } from "@/lib/admin";
+import { serverApi } from "@/lib/api-client/server";
+import { parsePage } from "@/lib/contracts/common";
 import { Reveal } from "@/components/motion";
 import Pagination from "@/components/pagination";
 import { EmptyState } from "@/components/ui";
@@ -33,7 +34,7 @@ export default async function AdminActivityPage({
 }) {
   const params = await searchParams;
   const page = parsePage(params.page);
-  const result = await listAuditLogs(page);
+  const result = await serverApi.admin.listActivity(page);
 
   return (
     <div className="mx-auto w-full max-w-5xl">

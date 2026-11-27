@@ -1,4 +1,4 @@
-import { getMyNotes, summarizeNotes } from "@/lib/notes";
+import { serverApi } from "@/lib/api-client/server";
 import { AnimatedNumber, HoverLift, Reveal, Stagger, StaggerItem } from "@/components/motion";
 import DashboardNotebook from "./notebook";
 import ImportNotesBanner from "./import-notes";
@@ -18,8 +18,9 @@ function StatCard({ label, value }: { label: string; value: number }) {
 }
 
 export default async function DashboardPage() {
-  const notes = await getMyNotes();
-  const stats = summarizeNotes(notes);
+  const page = await serverApi.notes.listMine({ page: 1, pageSize: 100 });
+  const notes = page.items;
+  const stats = { total: page.meta.total, ...page.summary };
 
   return (
     <div className="mx-auto w-full max-w-7xl">
@@ -44,7 +45,7 @@ export default async function DashboardPage() {
         </StaggerItem>
       </Stagger>
 
-      <ImportNotesBanner serverNoteCount={notes.length} />
+      <ImportNotesBanner serverNoteCount={page.meta.total} />
 
       <DashboardNotebook notes={notes} />
     </div>

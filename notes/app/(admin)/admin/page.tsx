@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getAdminStats } from "@/lib/admin";
+import { serverApi } from "@/lib/api-client/server";
 import { getCurrentProfile } from "@/lib/auth";
 import AdminNoteCard from "@/components/admin/note-card";
 import { AnimatedNumber, HoverLift, Reveal, Stagger, StaggerItem } from "@/components/motion";
@@ -51,7 +51,10 @@ function StatCard({ label, value, href }: { label: string; value: number; href?:
 }
 
 export default async function AdminOverviewPage() {
-  const [stats, profile] = await Promise.all([getAdminStats(), getCurrentProfile()]);
+  const [stats, profile] = await Promise.all([
+    serverApi.admin.overview(),
+    getCurrentProfile(),
+  ]);
   const isOwner = profile?.role === "owner";
 
   return (

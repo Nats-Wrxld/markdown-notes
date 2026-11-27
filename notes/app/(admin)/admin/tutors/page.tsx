@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { listTutors, parsePage } from "@/lib/admin";
+import { serverApi } from "@/lib/api-client/server";
+import { parsePage } from "@/lib/contracts/common";
 import { getCurrentProfile } from "@/lib/auth";
 import Avatar from "@/components/avatar";
 import CreateAccountForm from "@/components/admin/create-account-form";
@@ -22,7 +23,12 @@ export default async function AdminTutorsPage({
   const page = parsePage(params.page);
 
   const [result, profile] = await Promise.all([
-    listTutors({ page, query, status }),
+    serverApi.admin.listTutors({
+      page,
+      pageSize: 20,
+      q: query,
+      status: status || undefined,
+    }),
     getCurrentProfile(),
   ]);
 

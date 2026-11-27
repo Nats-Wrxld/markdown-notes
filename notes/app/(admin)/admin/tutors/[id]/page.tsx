@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getTutor, listTutorNotes, parsePage, type AdminNote } from "@/lib/admin";
+import { serverApi } from "@/lib/api-client/server";
+import { parsePage } from "@/lib/contracts/common";
+import type { AdminNote } from "@/lib/types";
 import Avatar from "@/components/avatar";
 import AdminNoteCard from "@/components/admin/note-card";
 import {
@@ -26,10 +28,10 @@ export default async function AdminTutorDetailPage({
   const query = await searchParams;
   const page = parsePage(query.page);
 
-  const tutor = await getTutor(id);
+  const tutor = await serverApi.admin.findTutor(id);
   if (!tutor) notFound();
 
-  const notesPage = await listTutorNotes(tutor.id, page);
+  const notesPage = await serverApi.admin.listTutorNotes(tutor.id, page);
   const owner = {
     id: tutor.id,
     display_name: tutor.display_name,

@@ -3,7 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Avatar from "@/components/avatar";
-import { removeAvatar, uploadAvatar } from "@/app/(account)/actions";
+import { removeAvatar, uploadAvatar } from "@/lib/api-client/profile";
 import { AVATAR_MAX_BYTES } from "@/lib/validation";
 
 const ACCEPTED = ["image/jpeg", "image/png", "image/webp"];

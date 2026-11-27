@@ -12,7 +12,7 @@ import {
   createNote,
   deleteNote,
   updateNote,
-} from "@/app/(tutor)/actions";
+} from "@/lib/api-client/notes";
 import { getDocumentText } from "@/lib/note-document";
 import type { DashboardNote } from "@/lib/types";
 

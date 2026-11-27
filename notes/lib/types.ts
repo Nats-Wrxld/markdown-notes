@@ -43,6 +43,37 @@ export type AuditLog = {
   created_at: string;
 };
 
+export type Page<T> = {
+  rows: T[];
+  total: number;
+  page: number;
+  pageCount: number;
+};
+
+export type NoteOwner = Pick<
+  Profile,
+  "id" | "display_name" | "email" | "avatar_url"
+>;
+
+export type AdminNote = DashboardNote & { owner: NoteOwner };
+
+export type AuditEntry = AuditLog & {
+  actor: Pick<Profile, "id" | "display_name" | "email"> | null;
+};
+
+export type TutorOption = Pick<Profile, "id" | "display_name" | "email">;
+
+export type AdminStats = {
+  tutorTotal: number;
+  tutorActive: number;
+  tutorSuspended: number;
+  adminTotal: number;
+  noteTotal: number;
+  notesThisWeek: number;
+  recentNotes: AdminNote[];
+  recentActivity: AuditEntry[];
+};
+
 export type UserPreferences = {
   user_id: string;
   theme: "light" | "dark";

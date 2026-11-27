@@ -8,7 +8,7 @@ import {
 } from "react";
 import type { JSONContent } from "@tiptap/core";
 import RichTextEditor from "@/app/rich-text-editor";
-import type { NoteFormState } from "@/app/(tutor)/actions";
+import type { NoteFormState } from "@/lib/api-client/form-state";
 import type { DashboardNote } from "@/lib/types";
 
 const EMPTY_DOCUMENT: JSONContent = {

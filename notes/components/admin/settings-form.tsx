@@ -2,7 +2,7 @@
 
 import { useActionState } from "react";
 import { useRouter } from "next/navigation";
-import { updatePlatformSettings } from "@/app/(admin)/actions";
+import { updatePlatformSettings } from "@/lib/api-client/admin";
 import { Alert, Field, SubmitButton } from "@/components/ui";
 
 export default function SettingsForm({

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getPlatformSettings, listAdmins } from "@/lib/admin";
+import { serverApi } from "@/lib/api-client/server";
 import { requireOwner } from "@/lib/auth";
 import Avatar from "@/components/avatar";
 import { AccountStatusButton } from "@/components/admin/account-controls";
@@ -14,7 +14,10 @@ const dateFormatter = new Intl.DateTimeFormat("en", { dateStyle: "medium" });
 
 export default async function AdminSettingsPage() {
   await requireOwner();
-  const [settings, admins] = await Promise.all([getPlatformSettings(), listAdmins()]);
+  const [settings, admins] = await Promise.all([
+    serverApi.admin.settings(),
+    serverApi.admin.listAdmins(),
+  ]);
 
   return (
     <div className="mx-auto w-full max-w-4xl">

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getAdminNote } from "@/lib/admin";
+import { serverApi } from "@/lib/api-client/server";
 import NoteContent from "@/app/note-content";
 import Avatar from "@/components/avatar";
 import NoteOversight from "@/components/admin/note-oversight";
@@ -19,7 +19,7 @@ export default async function AdminNoteDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const result = await getAdminNote(id);
+  const result = await serverApi.admin.findNote(id);
   if (!result) notFound();
 
   const { note, owner } = result;
