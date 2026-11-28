@@ -106,7 +106,9 @@ export default function AppHeader({ profile }: { profile: Profile }) {
             <div className="header-menu-divider" />
             <ThemeToggle />
             <div className="header-menu-divider" />
-            <form action={logOut} onClick={() => setIsMenuOpen(false)}>
+            {/* No onClick here: closing the menu unmounts this form during the
+                click, which aborts the submit and leaves the session intact. */}
+            <form action={logOut}>
               <button type="submit" role="menuitem" className="header-menu-action">
                 <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
                   <path

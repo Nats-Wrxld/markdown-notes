@@ -1,6 +1,7 @@
 "use server";
 
 import { headers } from "next/headers";
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { logAudit } from "@/lib/audit";
@@ -129,8 +130,12 @@ export async function logIn(
 export async function logOut(): Promise<void> {
   const supabase = await createClient();
   await logAudit({ action: "auth.logout" });
+  // Revokes the refresh token and clears the session cookies.
   await supabase.auth.signOut();
-  redirect("/");
+  // Drop every cached authenticated render so the browser cannot show a stale
+  // signed-in page (header, dashboard) after the session is gone.
+  revalidatePath("/", "layout");
+  redirect("/login");
 }
 
 export async function requestPasswordReset(
