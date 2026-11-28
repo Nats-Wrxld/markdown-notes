@@ -7,6 +7,51 @@ sources available at the time of writing.
 
 ---
 
+## 2026-11-28 — Logout fixed: session cleared, redirect to `/login`
+
+**Change:** the header's logout control now actually signs the user out.
+`components/app-header.tsx` closed the account menu from an `onClick` on the
+logout `<form>`, which unmounted that form during the click and cancelled the
+submit — so `logOut()` (and therefore `supabase.auth.signOut()`) never ran, the
+`sb-…-auth-token` cookie survived, and refreshing kept the user signed in. The
+handler is gone, so the form submits normally.
+
+`app/auth/actions.ts` → `logOut()` now redirects to `/login` (was `/`) and calls
+`revalidatePath("/", "layout")` after `signOut()`, so no cached authenticated
+render (header, dashboard) can be replayed from the router cache once the
+session is destroyed.
+
+**Unchanged:** Google/GitHub OAuth, `signInWithOAuth()`, `/auth/callback`,
+`/auth/confirm`, `lib/auth-callback.ts`, the login/signup forms, `proxy.ts`, and
+every `/api/v1` route and its authentication.
+
+**Verified (2026-11-28)**
+- Live app, before the fix: clicking "Log out" issued no request and left the
+  session cookie in place.
+- After the fix, locally against the production Supabase project: clicking the
+  header **Log out** reached `/login` with `document.cookie` empty; reload
+  stayed on `/login`; `/dashboard` after logout → `/login`; browser Back →
+  `/login` (no stale signed-in page); logging in again worked.
+- After the fix, on the live deployment: login → `/dashboard`; `/login` while
+  signed in → `/dashboard`; the deployed `logOut` action redirected to `/login`
+  and cleared every session cookie; reload stayed signed out; `/dashboard` →
+  `/login`; `/api/v1/notes` and `/api/v1/me` still `401`. (The live logout was
+  submitted through the server-rendered logout form on `/suspended`, because
+  the test browser window was minimised and could not hydrate to open the
+  header menu; the header click itself is covered by the local run above.)
+- Google button still reaches Google with
+  `redirect_to=<origin>/auth/callback` and the Supabase callback.
+- `/api/v1/notes` still `401` when signed out; `/api/v1/health` `200`.
+- `npx tsc --noEmit` clean.
+
+**Affected files:** `app/auth/actions.ts`, `components/app-header.tsx`,
+`docs/AUTHENTICATION.md`, `docs/TESTING_CHECKLIST.md`.
+
+**Commit:** `793af69`. **Deployed:** `urspace` production
+(`dpl_8Nv6NCEK7bbHZaoUEpKMN59i1g37`).
+
+---
+
 ## 2026-11-27 — Provider-agnostic REST API implemented; app migrated
 
 **Change:** all application data now flows through `/api/v1` → `lib/domain` →

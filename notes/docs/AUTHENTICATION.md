@@ -217,7 +217,12 @@ exists today.**
   role or suspension change is never served stale across requests.
 - `server.ts` swallows cookie-write failures in Server Components (where
   cookies cannot be set) because the proxy handles refresh.
-- Client sign-out calls `logOut`, which audits, signs out and redirects to `/`.
+- Client sign-out calls `logOut`, which audits, calls `supabase.auth.signOut()`
+  (revokes the refresh token and clears the session cookies), invalidates the
+  router cache with `revalidatePath("/", "layout")` and redirects to `/login`.
+- The header menu's logout form must not be unmounted from a click handler on
+  the form itself: doing so cancels the submit before the action runs, so
+  `signOut()` never executes and the session survives the click.
 
 ---
 

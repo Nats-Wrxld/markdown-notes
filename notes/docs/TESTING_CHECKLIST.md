@@ -51,8 +51,8 @@ scoring, role helpers/routing, note statistics.
 | # | Check | Result |
 | --- | --- | --- |
 | 3.1 | Email/password signup | `[ ]` not run |
-| 3.2 | Email/password login | `[ ]` not run |
-| 3.3 | Logout | `[ ]` not run |
+| 3.2 | Email/password login | `[x]` verified 2026-11-28 (live deployment + local; temporary account, since deleted) |
+| 3.3 | Logout | `[x]` verified 2026-11-28 (live + local): session cookies cleared, lands on `/login`, refresh stays signed out |
 | 3.4 | Password reset request | `[ ]` not run |
 | 3.5 | Password reset completion | `[ ]` not run |
 | 3.6 | Google OAuth — configured at Supabase | `[x]` 1 identity recorded |
@@ -60,7 +60,7 @@ scoring, role helpers/routing, note statistics.
 | 3.8 | GitHub OAuth — configured at Supabase | `[x]` 1 identity recorded |
 | 3.9 | GitHub OAuth — full round-trip | `[ ]` not run |
 | 3.10 | Microsoft/Facebook/X/Apple | `[!]` no identities; assumed unconfigured |
-| 3.11 | Signed-in visitor on `/login` is redirected | `[ ]` not run |
+| 3.11 | Signed-in visitor on `/login` is redirected | `[x]` verified 2026-11-28 live → `/dashboard` |
 | 3.12 | Invalid login shows exactly "Wrong email or password" | `[ ]` not run |
 | 3.13 | Callback without code → `/login?error=link` | `[ ]` not run live (logic inspected) |
 | 3.14 | Callback with `?error=` → `/login?error=oauth` | `[ ]` not run live (logic inspected) |

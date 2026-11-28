@@ -1,5 +1,62 @@
 # UrSpace Implementation Log
 
+## 2026-11-28 — Authentication flow repair (logout)
+
+### Reported
+Login should show the login page when signed out (and redirect when signed in);
+the Log out button should call `signOut()`, clear the session and go to `/login`;
+a refresh after logout must not sign the user back in; auth state and route
+protection must update; Google login and API authentication must be untouched.
+
+### Reproduced on the live deployment
+- Signed out, `/login` rendered the form — already correct.
+- Signed in, `/login` redirected to `/dashboard` — already correct.
+- Clicking **Log out** produced **no network request** and `document.cookie`
+  still held `sb-xwebcsemorzywsxdhtja-auth-token`. Logout never ran.
+
+### Root cause
+`components/app-header.tsx` rendered `<form action={logOut} onClick={closeMenu}>`.
+The click handler set `isMenuOpen = false`, which unmounted the menu — and the
+form with it — during the click event. The form was detached from the document
+before its submit event fired, so the Server Action was never invoked and
+`supabase.auth.signOut()` never executed. The session cookie therefore survived
+every logout, which is why a refresh still showed a signed-in app.
+
+### Fix
+- `components/app-header.tsx`: dropped the `onClick` from the logout form (with
+a comment explaining why it must not come back) so the form submits normally.
+- `app/auth/actions.ts` → `logOut()`: redirects to `/login` (was `/`) and calls
+`revalidatePath("/", "layout")` after `signOut()` so cached authenticated
+renders cannot be replayed from the client router cache. `signOut()` itself is
+unchanged: it revokes the refresh token and clears the session cookies.
+
+### Checked
+- Locally (`next dev` against the production Supabase project), driving the real
+header menu: login → `/dashboard`; `/login` while signed in → `/dashboard`;
+clicking **Log out** → `/login` with `document.cookie` empty; reload stayed
+signed out; `/dashboard` after logout → `/login`; browser Back → `/login`;
+logging in again worked.
+- On the live deployment: login → `/dashboard`; `/login` while signed in →
+`/dashboard`; the deployed `logOut` action redirected to `/login` and cleared
+every session cookie; reload stayed signed out; `/dashboard` → `/login`;
+`/api/v1/notes` and `/api/v1/me` still `401`.
+- The live logout was submitted through the server-rendered logout form on
+`/suspended`, not the header menu: the test browser window was minimised, so
+the page had no layout and never hydrated, and clicks could not open the menu.
+The header click path is covered by the local run above.
+- Google button still reaches `accounts.google.com` with
+`redirect_to=<origin>/auth/callback` and the Supabase `/auth/v1/callback`.
+- `/api/v1/notes` still `401` signed out, `/api/v1/health` `200`; no API or
+provider code was touched.
+- `npx tsc --noEmit` clean.
+
+### Test fixture
+A temporary confirmed `authflow.check.20261128@example.com` account (role
+`tutor`, profile created by the `handle_new_user` trigger) was used to exercise
+the flows and deleted afterwards.
+
+---
+
 ## 2026-11-13 — Architecture assessment (pre-implementation)
 
 ### Inspected
